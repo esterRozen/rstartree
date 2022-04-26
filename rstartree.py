@@ -92,7 +92,7 @@ class RSNode:
         # max is max # of values per node before splitting
         self.__lower = lower
         self.__upper = upper
-        self.parent = parent
+        self.parent: 'RSNode' = parent
         self.bounds: BoundingBox = None
         self.children: List[Union['RSNode', BoundingBox]] = []
 
@@ -107,7 +107,7 @@ class RSNode:
             return True
         return False
 
-    def choose_subtree(self, element: BoundingBox) -> 'RSNode':
+    def choose_subtree(self, element: Union[BoundingBox, Point]) -> 'RSNode':
         # compute covered, (checking if any entries fully cover the object)
         # if there is anything that does, choose the one with minimum volume or perimeter
         covering_nodes: List[RSNode] = []
@@ -198,6 +198,10 @@ class RSNode:
         else:
             return E[np.argmin(del_overlap)]
 
+    def update_parent_bounds(self, bounds: Union[BoundingBox, Point]):
+        if self.parent is not None:
+            self.parent.bounds = self.parent.bounds.min_bb_with(bounds)
+
     def insert(self, element: Union[BoundingBox, Point]) -> BoundingBox:
         # if node is leaf (and element is Point)
         # add point to node list and update bounding box
@@ -206,11 +210,15 @@ class RSNode:
             # append element!!
             self.children += element
             self.bounds = self.bounds.min_bb_with(element)
+            # update parent's bounds
+            self.update_parent_bounds(element)
+
+            # splitting a node reduces its bounds, but does not
+            # make the bounds of parent nodes any smaller
+            # split makes sure the parent's bounds are correct
             if len(self.children) > self.__upper:
                 self.split()
-            # have to pass bounds up to update higher nodes
-            return self.bounds
-
+            return
         else:
             # else:
             # if element is point, insert to child node
@@ -218,7 +226,8 @@ class RSNode:
             if isinstance(element, Point):
                 bounds = child.insert(element)
                 self.bounds = self.bounds.min_bb_with(bounds)
-                return self.bounds
+                self.update_parent_bounds(element)
+                return
 
             # else if node child is leaf
             # this must be bounding box, add to current position
@@ -226,18 +235,18 @@ class RSNode:
                 # append element!!
                 self.children += element
                 self.bounds = self.bounds.min_bb_with(element)
+                self.update_parent_bounds(element)
                 if len(self.children) > self.__upper:
                     self.split()
-                return self.bounds
+                return
 
             # interior node, expand down to children
             else:
-                bounds = child.insert(element)
-                self.bounds = self.bounds.min_bb_with(bounds)
-                return self.bounds
+                child.insert(element)
+                self.update_parent_bounds(element)
 
     def split(self):
-        # splits current node
+        # splits current node, presuming it is overcrowded
         pass
 
     def bb_without(self, point: Point):
