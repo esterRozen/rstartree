@@ -197,12 +197,14 @@ class RSNode:
         # add point to node list and update bounding box
         # check if split needed
         if self.is_leaf():
+            # append element!!
             self.children += element
             self.bounds = self.bounds.min_bb_with(element)
             if len(self.children) > self.__upper:
                 self.split()
             # have to pass bounds up to update higher nodes
             return self.bounds
+
         else:
             # else:
             # if element is point, insert to child node
@@ -215,6 +217,7 @@ class RSNode:
             # else if node child is leaf
             # this must be bounding box, add to current position
             elif child.is_leaf():
+                # append element!!
                 self.children += element
                 self.bounds = self.bounds.min_bb_with(element)
                 if len(self.children) > self.__upper:
@@ -226,7 +229,6 @@ class RSNode:
                 bounds = child.insert(element)
                 self.bounds = self.bounds.min_bb_with(bounds)
                 return self.bounds
-        pass
 
     def split(self):
         # splits current node
