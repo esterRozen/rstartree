@@ -23,35 +23,35 @@ eps = 0.001
 
 @dataclass
 class BoundingBox:
-    # points are abstracted as same _tops and _bottoms
-    _tops: NDArray[float]
-    _bottoms: NDArray[float]
+    # points are abstracted as same top and bottom bounds
+    tops: NDArray[float]
+    bottoms: NDArray[float]
 
     def __copy__(self) -> 'BoundingBox':
-        return BoundingBox(self._tops, self._bottoms)
+        return BoundingBox(self.tops, self.bottoms)
 
     def is_same(self, other: 'BoundingBox') -> bool:
-        return np.all(self._tops == other._tops) and np.all(self._bottoms == other._bottoms)
+        return np.all(self.tops == other.tops) and np.all(self.bottoms == other.bottoms)
 
     def center(self) -> float:
-        return np.divide(np.add(self._tops, self._bottoms), 2)
+        return np.divide(np.add(self.tops, self.bottoms), 2)
 
     def volume(self) -> float:
-        return np.prod(np.subtract(self._tops, self._bottoms))
+        return np.prod(np.subtract(self.tops, self.bottoms))
 
     def volume_diff(self, other: 'BoundingBox') -> float:
         return other.volume() - self.volume()
 
     def margin(self) -> float:
         # n dimensional perimeter
-        return 2 ** (len(self._tops) - 1) * np.sum(np.subtract(np.tops, np.bottoms))
+        return 2 ** (len(self.tops) - 1) * np.sum(np.subtract(np.tops, np.bottoms))
 
     def margin_diff(self, other: 'BoundingBox') -> float:
         return other.margin()-self.margin()
 
     def overlap(self, box: 'BoundingBox') -> 'BoundingBox':
-        bb_tops = np.min(self._tops, box._tops)
-        bb_bottoms = np.max(self._bottoms, box._bottoms)
+        bb_tops = np.min(self.tops, box.tops)
+        bb_bottoms = np.max(self.bottoms, box.bottoms)
         return BoundingBox(bb_tops, bb_bottoms)
 
     def overlap_margin(self, box: 'BoundingBox') -> float:
@@ -66,13 +66,13 @@ class BoundingBox:
         :param box: element to preview adding
         :return: BoundingBox
         """
-        tops = np.maximum(self._tops, box._tops)
-        bottoms = np.minimum(self._bottoms, box._tops)
+        tops = np.maximum(self.tops, box.tops)
+        bottoms = np.minimum(self.bottoms, box.tops)
         return BoundingBox(tops, bottoms)
 
     def encloses(self, box: 'BoundingBox') -> bool:
         # faster than checking if the bounding volume changes
-        return np.all(self._bottoms < box._bottoms) and np.all(box._tops < self._tops)
+        return np.all(self.bottoms < box.bottoms) and np.all(box.tops < self.tops)
 
 
 @dataclass
@@ -245,8 +245,15 @@ class RSNode:
                 child.insert(element)
                 self.update_parent_bounds(element)
 
+    def remove(self, element: Union[BoundingBox, Point]) -> bool:
+        pass
+
     def split(self):
         # splits current node, presuming it is overcrowded
+        pass
+
+    def merge(self, node1: 'RSNode', node2: 'RSNode'):
+        # must be siblings
         pass
 
     def bb_without(self, point: Point):
@@ -264,15 +271,11 @@ class RStarTree:
         # all leaf nodes have between m and M entries unless root
         # all leaves at same depth.
 
-    def insert(self, object: BoundingBox):
-        pass
+    def insert(self, element: Union[BoundingBox, Point]):
+        self.root.insert(element)
 
     def overflow_treatment(self):
         pass
 
     def reinsert(self):
-        pass
-
-    def split(self, node: RSNode):
-
         pass
