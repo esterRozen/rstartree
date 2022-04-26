@@ -12,31 +12,40 @@ import numpy as np
 from numpy.typing import NDArray
 
 
+eps = 0.001
+
+
 @dataclass
 class BoundingBox:
-    # points are abstracted as same tops and bottoms
-    tops: NDArray[float]
-    bottoms: NDArray[float]
+    # points are abstracted as same _tops and _bottoms
+    _tops: NDArray[float]
+    _bottoms: NDArray[float]
+
+    def __copy__(self) -> 'BoundingBox':
+        return BoundingBox(self._tops, self._bottoms)
+
+    def is_same(self, other: 'BoundingBox') -> bool:
+        return np.all(self._tops == other._tops) and np.all(self._bottoms == other._bottoms)
 
     def center(self) -> float:
-        return np.divide(np.add(self.tops, self.bottoms), 2)
+        return np.divide(np.add(self._tops, self._bottoms), 2)
 
     def volume(self) -> float:
-        return np.prod(np.subtract(self.tops, self.bottoms))
+        return np.prod(np.subtract(self._tops, self._bottoms))
 
     def volume_diff(self, other: 'BoundingBox') -> float:
         return other.volume() - self.volume()
 
     def margin(self) -> float:
         # n dimensional perimeter
-        return 2**(len(self.tops)-1) * np.sum(np.subtract(np.tops, np.bottoms))
+        return 2 ** (len(self._tops) - 1) * np.sum(np.subtract(np.tops, np.bottoms))
 
     def margin_diff(self, other: 'BoundingBox') -> float:
         return other.margin()-self.margin()
 
     def overlap(self, box: 'BoundingBox') -> 'BoundingBox':
-        bb_tops = np.min(self.tops, box.tops)
-        bb_bottoms = np.max(self.bottoms, box.bottoms)
+        bb_tops = np.min(self._tops, box._tops)
+        bb_bottoms = np.max(self._bottoms, box._bottoms)
         return BoundingBox(bb_tops, bb_bottoms)
 
     def overlap_margin(self, box: 'BoundingBox') -> float:
@@ -45,25 +54,31 @@ class BoundingBox:
     def overlap_volume(self, box: 'BoundingBox') -> float:
         return self.overlap(box).volume()
 
-    def is_same(self, other) -> bool:
-        return np.all(self.tops == other.tops) and np.all(self.bottoms == other.bottoms)
-
     def min_bb_with(self, box: 'BoundingBox') -> 'BoundingBox':
-        tops = np.maximum(self.tops, box.tops)
-        bottoms = np.minimum(self.bottoms, box.tops)
+        """
+        mininimum bounding box containing
+        :param box: element to preview adding
+        :return: BoundingBox
+        """
+        tops = np.maximum(self._tops, box._tops)
+        bottoms = np.minimum(self._bottoms, box._tops)
         return BoundingBox(tops, bottoms)
 
     def encloses(self, box: 'BoundingBox') -> bool:
         # faster than checking if the bounding volume changes
-        return np.all(self.bottoms < box.bottoms) and np.all(box.tops < self.tops)
+        return np.all(self._bottoms < box._bottoms) and np.all(box._tops < self._tops)
 
 
 @dataclass
 class Point(BoundingBox):
     # idiomatically communicate this is a point
     def __init__(self, point: NDArray):
-        self.tops = point
-        self.bottoms = point
+        self._tops = point
+        self._bottoms = point
+        self.point = point
+
+    def __copy__(self) -> 'Point':
+        return Point(self._tops)
 
 
 class RSNode:
@@ -78,6 +93,9 @@ class RSNode:
         return self
 
     def insert(self, object: BoundingBox):
+        pass
+
+    def bb_without(self, point: Point):
         pass
 
 
@@ -123,7 +141,7 @@ class RStarTree:
             # offset by 1 due to list slicing
             idx = i+2
             n_bb = node.bounds
-            if n_bb.overlap_margin(bb_with_obj) - n_bb.overlap_margin(bb) > 0.0001:
+            if n_bb.overlap_margin(bb_with_obj) - n_bb.overlap_margin(bb) > eps:
                 all_valid = False
                 # seek last idk where increase in overlap is above 0
                 last_idx = idx
@@ -135,16 +153,47 @@ class RStarTree:
         # first filter out all but first p entries,
         # where Ep is last entry whose overlap would increase if object inserted to E1
         E = E[:last_idx]
+        del_overlap = [0 for _ in range(E)]
         candidates: List[RSNode] = []
         success = False
 
-
         # depth first, find index t among 1..p where assignment of object to Et
         # would not increase overlap with other entries
+        def check_comp(object: BoundingBox, nodes: List[RSNode], t: int, cand: List[RSNode], success: bool, method: str):
+            if nodes[t] not in cand:
+                cand += nodes[t]
+            nod_bb: BoundingBox = nodes[t].bounds
+            app_bb: BoundingBox = nodes[t].bounds.min_bb_with(object)
 
-        # during traveral, all indices added to candidate list. If depth search not succesful,
+            out = None
+            for j, comp in enumerate(nodes):
+                if j != t:
+                    test_bb: BoundingBox = comp.bounds
+                    if method == "perim":
+                        inc_overlap = app_bb.overlap_margin(comp.bounds) - nod_bb.overlap_margin(comp.bounds)
+                        del_overlap[t] += inc_overlap
+                    else:
+                        inc_overlap = app_bb.overlap_volume(comp.bounds) - nod_bb.overlap_volume(comp.bounds)
+                        del_overlap[t] += inc_overlap
+                    if inc_overlap > eps and nodes[j] not in cand:
+                        out = check_comp(object, nodes, j, cand, success, method)
+                        if success:
+                            return out
+            if del_overlap[t] < eps:
+                success = True
+                return nodes[t]
+
+        # during traveral, all indices are added to candidate list. If depth search not succesful,
         # use index which has minimum increase in overlap
-        pass
+        if np.any(list(map(lambda node: node.bounds.min_bb_with(object).volume(), E)) < eps):
+            c = check_comp(object, E, 1, candidates, success, "perim")
+        else:
+            c = check_comp(object, E, 1, candidates, success, "vol")
+
+        if success:
+            return c
+        else:
+            return E[np.argmin(del_overlap)]
 
     def insert(self, object: BoundingBox):
         pass
