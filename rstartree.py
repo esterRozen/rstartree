@@ -6,7 +6,7 @@ https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.367.7273&rep=rep1&type
 as well as original algorithm:
 https://infolab.usc.edu/csci599/Fall2001/paper/rstar-tree.pdf
 """
-from typing import List
+from typing import List, Union
 from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
@@ -82,34 +82,31 @@ class Point(BoundingBox):
 
 
 class RSNode:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, lower=5, upper=50):
+        # max is max # of values per node before splitting
+        self.__lower = lower
+        self.__upper = upper
         self.parent = parent
         self.bounds: BoundingBox = None
-        self.children: List[RSNode.__class__()] = []
-        self.values: List[Point] = []
+        self.children: List[Union['RSNode', BoundingBox]] = []
 
     def set_bounds(self, bounds: BoundingBox):
         self.bounds = bounds
         return self
 
-    def insert(self, object: BoundingBox):
-        pass
+    def is_leaf(self):
+        if self.children is None:
+            return True
+        if isinstance(self.children[0], BoundingBox):
+            return True
+        return False
 
-    def bb_without(self, point: Point):
-        pass
-
-
-class RStarTree:
-    def __init__(self):
-        # dont forget experimental parameters
-        self.root = None
-
-    def choose_subtree(self, node: RSNode, object: BoundingBox):
+    def choose_subtree(self, element: BoundingBox) -> 'RSNode':
         # compute covered, (checking if any entries fully cover the object)
         # if there is anything that does, choose the one with minimum volume or perimeter
         covering_nodes: List[RSNode] = []
-        for box in node.children:
-            if box.bounds.encloses(object):
+        for box in self.children:
+            if box.bounds.encloses(element):
                 covering_nodes += box
         if covering_nodes is not None:
             idx = np.argmin(list(map(
@@ -122,8 +119,8 @@ class RStarTree:
 
         # otherwise, find growth of overlap's perimeter for each entry if it included point
         # sort in ascending order of the amount each would grow in perimeter
-        E: List[RSNode] = [child.bounds for child in node.children]
-        perim_change = [node.bounds.min_bb_with(object).margin_diff(node.bounds) for node in E]
+        E: List[RSNode] = [child.bounds for child in self.children]
+        perim_change = [node.bounds.min_bb_with(element).margin_diff(node.bounds) for node in E]
         E: NDArray[RSNode] = np.array([[x, y] for x, y in sorted(zip(perim_change, E), reverse=False)])
         perim_change, E = (E[:, 0].tolist(), E[:, 1].tolist())
 
@@ -132,7 +129,7 @@ class RStarTree:
         # TODO find way to maintain sorting of this when adding nodes
         node = E[0]
         bb = node.bounds
-        bb_with_obj = bb.min_bb_with(object)
+        bb_with_obj = bb.min_bb_with(element)
 
         all_valid = True
         last_idx = 0     # for next section
@@ -185,15 +182,70 @@ class RStarTree:
 
         # during traveral, all indices are added to candidate list. If depth search not succesful,
         # use index which has minimum increase in overlap
-        if np.any(list(map(lambda node: node.bounds.min_bb_with(object).volume(), E)) < eps):
-            c = check_comp(object, E, 1, candidates, success, "perim")
+        if np.any(list(map(lambda node: node.bounds.min_bb_with(element).volume(), E)) < eps):
+            c = check_comp(element, E, 1, candidates, success, "perim")
         else:
-            c = check_comp(object, E, 1, candidates, success, "vol")
+            c = check_comp(element, E, 1, candidates, success, "vol")
 
         if success:
             return c
         else:
             return E[np.argmin(del_overlap)]
+
+    def insert(self, element: Union[BoundingBox, Point]) -> BoundingBox:
+        # if node is leaf (and element is Point)
+        # add point to node list and update bounding box
+        # check if split needed
+        if self.is_leaf():
+            self.children += element
+            self.bounds = self.bounds.min_bb_with(element)
+            if len(self.children) > self.__upper:
+                self.split()
+            # have to pass bounds up to update higher nodes
+            return self.bounds
+        else:
+            # else:
+            # if element is point, insert to child node
+            child = self.choose_subtree(element)
+            if isinstance(element, Point):
+                bounds = child.insert(element)
+                self.bounds = self.bounds.min_bb_with(bounds)
+                return self.bounds
+
+            # else if node child is leaf
+            # this must be bounding box, add to current position
+            elif child.is_leaf():
+                self.children += element
+                self.bounds = self.bounds.min_bb_with(element)
+                if len(self.children) > self.__upper:
+                    self.split()
+                return self.bounds
+
+            # interior node, expand down to children
+            else:
+                bounds = child.insert(element)
+                self.bounds = self.bounds.min_bb_with(bounds)
+                return self.bounds
+        pass
+
+    def split(self):
+        # splits current node
+        pass
+
+    def bb_without(self, point: Point):
+        pass
+
+
+class RStarTree:
+    def __init__(self, lower=4, upper=50):
+        self.__lower = lower
+        self.__upper = upper
+        # dont forget experimental parameters
+        self.root = RSNode(lower=lower, upper=upper)
+        # root has at least two children unless it is leaf
+        # non-leaf nodes have between lower and upper # of children unless root
+        # all leaf nodes have between m and M entries unless root
+        # all leaves at same depth.
 
     def insert(self, object: BoundingBox):
         pass
@@ -204,5 +256,6 @@ class RStarTree:
     def reinsert(self):
         pass
 
-    def split(self):
+    def split(self, node: RSNode):
+
         pass
