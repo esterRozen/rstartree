@@ -5,6 +5,9 @@ Algorithm based on R* Tree improved method:
 https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.367.7273&rep=rep1&type=pdf
 as well as original algorithm:
 https://infolab.usc.edu/csci599/Fall2001/paper/rstar-tree.pdf
+some r* tree algos which weren't majorly different
+from their r tree counterpart loosely based on:
+http://www.mathcs.emory.edu/~cheung/Courses/554/Syllabus/3-index/R-tree3.html
 """
 from typing import List, Union
 from dataclasses import dataclass
