@@ -334,7 +334,7 @@ class RSNode:
                 if np.any(list(map(lambda tup: tup[1] < eps or tup[2] < eps, margin_splits))):
                     # there are overlap free candidates.
                     # skip work and just choose minimum perimeter
-                    indexes =
+                    pass
         pass
 
     def split(self, group1: List[BoundingBox], group2: List[BoundingBox]):
