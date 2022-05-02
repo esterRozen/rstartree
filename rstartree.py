@@ -274,6 +274,8 @@ class RSNode:
         if self.is_leaf():
             # append element!!
             self.children += [element]
+            if self.o_box is None:
+                self.o_box = element
             self.bounds = element.min_bb_with(self.bounds)
             # update parent's bounds
             self.update_parent_bounds(element)
