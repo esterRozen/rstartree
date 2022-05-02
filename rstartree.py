@@ -51,7 +51,6 @@ class BoundingBox:
         bb_bottoms = np.maximum(box_1.bottoms, box_2.bottoms)
         if np.any(bb_tops < bb_bottoms):
             return None
-
         return BoundingBox(bb_tops, bb_bottoms)
 
     @staticmethod
@@ -267,126 +266,51 @@ class RSNode:
             else:
                 self.parent.bounds = self.parent.bounds.min_bb_with(bounds)
 
-    def insert(self, element: Union[BoundingBox, Point]) -> BoundingBox:
-        # if node is leaf (and element is Point)
+    def insert(self, element: Union[BoundingBox]) -> BoundingBox:
+        # if node is leaf
         # add point to node list and update bounding box
         # check if split needed
         if self.is_leaf():
-            # append element!!
-            self.children += [element]
-            if self.o_box is None:
-                self.o_box = element
-            self.bounds = element.min_bb_with(self.bounds)
-            # update parent's bounds
-            self.update_parent_bounds(element)
+            if len(self.children) < self.__upper:
+                self.children += [element]
+                self.bounds = element.min_bb_with(self.bounds)
+                # update parent's bounds
+                self.update_parent_bounds(element)
 
             # splitting a node reduces its bounds, but does not
             # make the bounds of parent nodes any smaller
             # split makes sure the parent's bounds are correct
-            if len(self.children) > self.__upper:
+            if len(self.children) == self.__upper:
                 self.choose_split()
             return self.bounds
         else:
             # else:
-            # if element is point, insert to child node
+            # insert to child node
             child = self.choose_subtree(element)
-            if isinstance(element, Point):
-                bounds = child.insert(element)
-                self.bounds = self.bounds.min_bb_with(bounds)
-                self.update_parent_bounds(element)
-                if len(self.children) > self.__upper:
-                    self.choose_split()
-                return self.bounds
-
-            # else if node child is leaf
-            # this must be bounding box, add to current position
-            elif child.is_leaf():
-                # append element!!
-                self.children += [element]
-                self.bounds = self.bounds.min_bb_with(element)
-                self.update_parent_bounds(element)
-                if len(self.children) > self.__upper:
-                    self.choose_split()
-                return self.bounds
-
-            # interior node, expand down to children
-            else:
-                child.insert(element)
-                self.update_parent_bounds(element)
+            bounds = child.insert(element)
+            self.bounds = self.bounds.min_bb_with(bounds)
+            self.update_parent_bounds(element)
+            if len(self.children) == self.__upper:
+                self.choose_split()
+            return self.bounds
 
     def remove(self, element: Union[BoundingBox, Point]) -> bool:
         pass
 
     def choose_split(self):
-        # splits current node, presuming it is overcrowded
+        # chooses split composition of current node, assuming it is overcrowded
+        # if internal node:
+        if not self.is_leaf():
+            # consider all dimensions
+            pass
+
         if self.is_leaf():
             # split candidates
             bots = [child.bottoms for child in self.children]
             tops = [child.tops for child in self.children]
 
             for dim in range(len(self.bounds.tops.shape)):
-                bot_sort_bbs = sorted(self.children, key=lambda child: child.bottoms[dim])
-                top_sort_bbs = sorted(self.children, key=lambda child: child.tops[dim])
-
-                max_perim = self.bounds.margin() * 2 - np.min(self.bounds.bottoms)
-
-                margin_splits: List[Tuple[int, float, float]] = []
-                ovlp_splits: List[Tuple[int, float, float]] = []
-                bbox_splits: List[Tuple[BoundingBox, BoundingBox, BoundingBox, BoundingBox]] = []
-
-                asym = []
-                for i in range(self.__lower, self.__upper):
-                    sc_i: List[NDArray[BoundingBox]] = np.split(np.stack([top_sort_bbs, bot_sort_bbs], axis=0), [i],
-                                                                axis=1)
-
-                    sc_top_1 = BoundingBox.create(sc_i[0][0, :])
-                    sc_top_2 = BoundingBox.create(sc_i[1][0, :])
-                    sc_bot_1 = BoundingBox.create(sc_i[0][1, :])
-                    sc_bot_2 = BoundingBox.create(sc_i[1][1, :])
-                    bbox_splits += [(sc_top_1, sc_top_2, sc_bot_1, sc_bot_2)]
-
-                    margin_top = sc_top_1.margin() + sc_top_2.margin() - max_perim
-                    margin_bot = sc_bot_1.margin() + sc_bot_2.margin() - max_perim
-                    margin_splits += [(i, margin_top, margin_bot)]
-
-                    # if this is not a leaf node (it is not),
-                    # skip finding lowest margin axis and consider all nodes
-
-                    ovlp_top = BoundingBox.overlap_sc(sc_top_1, sc_top_2)
-                    ovlp_bot = BoundingBox.overlap_sc(sc_bot_1, sc_bot_2)
-                    if ovlp_top is None:
-                        ovlp_marg_top = 0
-                    else:
-                        ovlp_marg_top = ovlp_top.margin()
-                    # ovlp_vol_top = ovlp_top.volume()
-                    if ovlp_bot is None:
-                        ovlp_marg_bot = 0
-                    else:
-                        ovlp_marg_bot = ovlp_bot.margin()
-                    # ovlp_vol_bot = ovlp_bot.volume()
-
-                    ovlp_splits += [(i, ovlp_marg_top, ovlp_marg_bot)]
-                    asym += [self.bounds.asymmetry(self.o_box, dim)]
-
-                # computing wf stuff
-                mean = (1 - 2*self.__lower/(self.__upper + 1)) * np.array(asym)
-                sigma = self.__shape * (1 + abs(mean))
-                # y offset
-                y1 = math.exp(-1/(self.__shape**2))
-                # y scaling
-                y_s = 1/(1 - y1)
-                # dependent variable
-                xi = 2 * np.arange(self.__lower, self.__upper-self.__lower+1) / self.__upper - 1
-                w_f: NDArray[float] = y_s * (np.exp(-1*(((xi-mean)/sigma)**2)) - y1)
-
-                mg_sc: NDArray[float] = np.array(margin_splits)[:, 1:]
-                ov_sc: NDArray[float] = np.array(ovlp_splits)[:, 1:]
-                w_gxw_f = np.multiply(mg_sc, w_f)
-                w_gdw_f = np.divide(ov_sc, w_f)
-
-                idx = np.abs(ov_sc) < eps
-                w = np.put(w_gdw_f, idx, w_gxw_f[idx])
-                i = np.argmin(w)
+                self._minimize_on(dim)
                 if np.any(list(map(lambda tup: abs(tup[1]) < eps or abs(tup[2]) < eps, margin_splits))):
                     # there are overlap free candidates.
                     # skip work and just choose minimum perimeter
@@ -394,12 +318,106 @@ class RSNode:
 
         pass
 
+    def _minimize_on(self, dim):
+        max_perim = self.bounds.margin() * 2 - np.min(self.bounds.bottoms)
+
+        top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
+        bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
+        sc_i: NDArray[BoundingBox] = np.split(
+            np.stack([top_bbs, bot_bbs], axis=0),
+            np.arange(self.__lower, self.__upper - self.__lower), axis=1)
+
+        sc = np.apply_along_axis(self.__create_sc, sc_i, axes=0)
+        wf = self._compute_wf(dim, sc)
+        # dim 0: different split indexes
+        # dim 1: top vs bottom
+        # dim 2: sc_1, sc_2
+        # outer apply: over different split indexes
+        # inner apply: over different bounding box positions
+        # margin of bounding box pairs sc_1 and sc_2
+        margin_sc = np.apply_along_axis(lambda block:
+                                        np.sum(
+                                            np.apply_along_axis(
+                                                lambda bbox:
+                                                bbox.margin(),
+                                                axis=0, arr=block),
+                                            axis=0),
+                                        axis=0, arr=sc)
+
+        # overlap of bounding box pairs sc_1 and sc_2
+        overlap_sc = np.apply_along_axis(lambda block:
+                                         np.apply_along_axis(
+                                             lambda pair:
+                                             BoundingBox.overlap_sc(pair[0], pair[1]),
+                                             axis=0, arr=block),
+                                         axis=0, arr=sc)
+
+        # margin of overlap of box pairs
+        margin_overlap_sc = np.apply_along_axis(lambda vector:
+                                                np.apply_along_axis(
+                                                    lambda bbox:
+                                                    bbox.margin(),
+                                                    axis=0, arr=vector),
+                                                axis=0, arr=overlap_sc)
+        wg: NDArray = np.multiply(margin_sc - max_perim, wf)
+        wg_alt: NDArray = np.divide(margin_overlap_sc, wf)
+
+        indexes = np.abs(margin_overlap_sc) < eps
+        wg = np.put(wg, indexes, wg_alt[indexes])
+        # should give the
+        np.unravel_index(np.argmin(wg), wg.shape)
+
+    def _compute_wf(self, dim: int, sc: NDArray[BoundingBox]):
+        # dim 0: split candidate index
+        # dim 1: top vs bottom
+        # dim 2: sc_1, sc_2
+        asym = np.apply_along_axis(
+            lambda split:
+            np.apply_along_axis(
+                lambda side:
+                np.apply_along_axis(
+                    lambda box:
+                    self.bounds.asymmetry(box, dim),
+                    axis=0, arr=side),
+                axis=0, arr=split),
+            axis=0, arr=sc)
+
+        mean = (1 - self.__lower/(self.__upper + 1)) * asym
+        sigma = self.__shape * (1 + np.abs(mean))
+        # y offset
+        y1 = math.exp(-1/(self.__shape**2))
+        # y scaling
+        ys = 1/(1 - y1)
+        xi = 2*np.arange(self.__lower, self.__upper-self.__lower+1)/(self.__upper+1) - 1
+
+        z_score = (xi - mean)/sigma
+        wf = ys*(np.exp(-1*(z_score**2)) - y1)
+        return wf
+
+    @staticmethod
+    def __create_sc(arr: NDArray) -> NDArray[BoundingBox]:
+        return np.array([
+            [BoundingBox.create(arr[0][0, :]),
+             BoundingBox.create(arr[1][0, :])],
+            [BoundingBox.create(arr[0][1, :]),
+             BoundingBox.create(arr[1][1, :])]
+        ])
+
     def split(self, group1: List[BoundingBox], group2: List[BoundingBox]):
         pass
 
-    def merge(self, node1: 'RSNode', node2: 'RSNode'):
-        # must be siblings
+    def overflow_treatment(self):
+        # if this is the root level *or* it's the first call in this node
+        # split node, creating new node as child of parent node.
         pass
+
+    def merge(self):
+        # call insert on parent with this node's children
+        # parent is self.parent
+        if self.parent is None:
+            self.parent = RSNode(None, self.__lower, self.__upper, self.__shape)
+        for node in self.children:
+            self.parent.insert(node)
 
     def bb_without(self, point: Point):
         pass
