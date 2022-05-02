@@ -361,7 +361,7 @@ class RSNode:
         indexes = np.abs(margin_overlap_sc) < eps
         wg = np.put(wg, indexes, wg_alt[indexes])
         # should give the
-        np.unravel_index(np.argmin(wg), wg.shape)
+        return sc[np.unravel_index(np.argmin(wg), wg.shape)]
 
     def _compute_wf(self, dim: int, sc: NDArray[BoundingBox]):
         # dim 0: split candidate index
