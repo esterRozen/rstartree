@@ -72,21 +72,24 @@ class BoundingBox:
     def width(self, dim: int):
         return self.tops[dim] - self.bottoms[dim]
 
+    @property
     def center(self) -> float:
         return np.divide(np.add(self.tops, self.bottoms), 2)
 
+    @property
     def volume(self) -> float:
         return float(np.prod(np.subtract(self.tops, self.bottoms)))
 
     def volume_diff(self, other: 'BoundingBox') -> float:
-        return other.volume() - self.volume()
+        return other.volume - self.volume
 
+    @property
     def margin(self) -> float:
         # n dimensional perimeter
         return 2 ** (len(self.tops) - 1) * np.sum(np.subtract(self.tops, self.bottoms))
 
     def margin_diff(self, other: 'BoundingBox') -> float:
-        return self.margin() - other.margin()
+        return self.margin - other.margin
 
     def overlap(self, box: 'BoundingBox') -> Union['BoundingBox', None]:
         bb_tops = np.minimum(self.tops, box.tops)
@@ -99,7 +102,7 @@ class BoundingBox:
         overlap = self.overlap(box)
         if overlap is None:
             return 0.0
-        return overlap.margin()
+        return overlap.margin
 
     def overlap_volume(self, box: 'BoundingBox') -> float:
         overlap = self.overlap(box)
@@ -142,25 +145,33 @@ class Point(BoundingBox):
 
 # noinspection SpellCheckingInspection
 class RSNode:
-    def __init__(self, parent, lower=5, upper=50, shape=0.5):
-        # max is max # of values per node before splitting
-        self.__lower = lower
-        self.__upper = upper
-        self.__shape = shape
+    def __init__(self, parent, tree: 'RStarTree', shape=0.5):
+        # can access global parameters
+        self.__tree = tree
         self.parent: 'RSNode' = parent
 
         self.bounds: Union[BoundingBox, None] = None
         self.children: List[Union['RSNode', BoundingBox]] = []
         self.o_box: Union[BoundingBox, None] = None
+        # TODO remove this
         self._success = False
 
     def __repr__(self):
-        return self.bounds.__repr__() + ", leaf: " + str(self.is_leaf()) + ", children: " + str(len(self.children))
+        return self.bounds.__repr__() + ", leaf: " + str(self.is_leaf) + ", children: " + str(len(self.children))
 
-    def set_bounds(self, bounds: BoundingBox):
-        self.bounds = bounds
-        return self
+    @property
+    def __lower(self):
+        return self.__tree.lower
 
+    @property
+    def __upper(self):
+        return self.__tree.upper
+
+    @property
+    def __shape(self):
+        return self.__tree.shape
+
+    @property
     def is_leaf(self):
         if not self.children:
             return True
@@ -270,7 +281,7 @@ class RSNode:
         # if node is leaf
         # add point to node list and update bounding box
         # check if split needed
-        if self.is_leaf():
+        if self.is_leaf:
             if len(self.children) < self.__upper:
                 self.children += [element]
                 self.bounds = element.min_bb_with(self.bounds)
@@ -294,28 +305,34 @@ class RSNode:
                 self.choose_split()
             return self.bounds
 
-    def remove(self, element: Union[BoundingBox, Point]) -> bool:
-        pass
-
     def choose_split(self):
         # chooses split composition of current node, assuming it is overcrowded
         # if internal node:
-        if not self.is_leaf():
+        if not self.is_leaf:
             # consider all dimensions
-            pass
-
-        if self.is_leaf():
-            # split candidates
-            bots = [child.bottoms for child in self.children]
-            tops = [child.tops for child in self.children]
-
+            splits = []
             for dim in range(len(self.bounds.tops.shape)):
-                self._minimize_on(dim)
+                splits += [self._minimize_on(dim)]
+            # TODO choose best among splits
 
+        if self.is_leaf:
+            # only determine likely good split dimension
+            dim = self._determine_dim()
+            split = self._minimize_on(dim)
+
+        # TODO apply split
+
+    def split(self, dim: int, idx: int, side: int):
+        # still not 100% sure on this formatting..
         pass
 
+    def _determine_dim(self):
+        # TODO output dim to split across
+        # minimize total perimeter of split candidates by dimension
+        return NotImplemented
+
     def _minimize_on(self, dim):
-        max_perim = self.bounds.margin() * 2 - np.min(self.bounds.bottoms)
+        max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
 
         top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
         bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
@@ -335,7 +352,7 @@ class RSNode:
                                         np.sum(
                                             np.apply_along_axis(
                                                 lambda bbox:
-                                                bbox.margin(),
+                                                bbox.margin,
                                                 axis=0, arr=block),
                                             axis=0),
                                         axis=0, arr=sc)
@@ -352,7 +369,7 @@ class RSNode:
         margin_overlap_sc = np.apply_along_axis(lambda vector:
                                                 np.apply_along_axis(
                                                     lambda bbox:
-                                                    bbox.margin(),
+                                                    bbox.margin,
                                                     axis=0, arr=vector),
                                                 axis=0, arr=overlap_sc)
         wg: NDArray = np.multiply(margin_sc - max_perim, wf)
@@ -399,32 +416,14 @@ class RSNode:
              BoundingBox.create(arr[1][1, :])]
         ])
 
-    def split(self, group1: List[BoundingBox], group2: List[BoundingBox]):
-        pass
-
-    def overflow_treatment(self):
-        # if this is the root level *or* it's the first call in this node
-        # split node, creating new node as child of parent node.
-        pass
-
-    def merge(self):
-        # call insert on parent with this node's children
-        # parent is self.parent
-        if self.parent is None:
-            self.parent = RSNode(None, self.__lower, self.__upper, self.__shape)
-        for node in self.children:
-            self.parent.insert(node)
-
-    def bb_without(self, point: Point):
-        pass
-
 
 class RStarTree:
-    def __init__(self, lower=4, upper=50):
-        self.__lower = lower
-        self.__upper = upper
+    def __init__(self, lower=4, upper=50, shape=0.5):
+        self.lower = lower
+        self.upper = upper
+        self.shape = shape
         # dont forget experimental parameters
-        self.root = RSNode(None, lower=lower, upper=upper)
+        self.root = RSNode(None, self)
         # root has at least two children unless it is leaf
         # non-leaf nodes have between lower and upper # of children unless root
         # all leaf nodes have between m and M entries unless root
@@ -439,17 +438,14 @@ class RStarTree:
     def overflow_treatment(self):
         pass
 
-    def reinsert(self):
-        pass
-
 
 if __name__ == "__main__":
     lower = 1
     upper = 4
     rtree = RStarTree(lower=lower, upper=upper)
-    cnode_1 = RSNode(rtree.root, lower=lower, upper=upper)
+    cnode_1 = RSNode(rtree.root, rtree)
     cnode_1.insert(Point(np.array([3, 5])))
-    cnode_2 = RSNode(rtree.root, lower=lower, upper=upper)
+    cnode_2 = RSNode(rtree.root, rtree)
     cnode_2.insert(Point(np.array([9, 2])))
     rtree.root.children = [cnode_1, cnode_2]
 
