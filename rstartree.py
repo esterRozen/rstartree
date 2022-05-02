@@ -311,10 +311,6 @@ class RSNode:
 
             for dim in range(len(self.bounds.tops.shape)):
                 self._minimize_on(dim)
-                if np.any(list(map(lambda tup: abs(tup[1]) < eps or abs(tup[2]) < eps, margin_splits))):
-                    # there are overlap free candidates.
-                    # skip work and just choose minimum perimeter
-                    pass
 
         pass
 
