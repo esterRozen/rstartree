@@ -35,7 +35,8 @@ class RSNode:
         self._success = False
 
     def __repr__(self):
-        return self.bounds.__repr__() + ", leaf: " + str(self.is_leaf) + ", children: " + str(len(self.children))
+        return self.bounds.__repr__() + ", leaf: " \
+               + str(self.is_leaf) + ", children: " + str(len(self.children))
 
     @property
     def __lower(self):
