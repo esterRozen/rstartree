@@ -58,7 +58,15 @@ class RSNode:
             return True
         return False
 
-    def choose_subtree(self, element: Union[BoundingBox, Point]) -> 'RSNode':
+    @property
+    def is_overfilled(self):
+        return self.children.__len__() >= self.__tree.upper
+
+    @property
+    def is_root(self):
+        return self.parent is None
+
+    def _choose_subtree(self, element: Union[BoundingBox, Point]) -> 'RSNode':
         # compute covered, (checking if any entries fully cover the object)
         # if there is anything that does, choose the one with minimum volume or perimeter
         covering_nodes: List[RSNode] = []
