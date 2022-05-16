@@ -191,27 +191,34 @@ class RSNode:
             if len(self.children) < self.__upper:
                 self.children += [element]
                 self.bounds = element.min_bb_with(self.bounds)
-                # update parent's bounds
-                self._update_parent_bounds(element)
-
-            # splitting a node reduces its bounds, but does not
-            # make the bounds of parent nodes any smaller
-            # split makes sure the parent's bounds are correct
-            if len(self.children) == self.__upper:
-                self.choose_split()
-            return self.bounds
+            return
         else:
             # else:
             # insert to child node
-            child = self.choose_subtree(element)
-            bounds = child.insert(element)
-            self.bounds = self.bounds.min_bb_with(bounds)
-            self._update_parent_bounds(element)
-            if len(self.children) == self.__upper:
-                self.choose_split()
-            return self.bounds
+            child = self._choose_subtree(element)
+            child.insert(element)
+            if child.is_overfilled:
+                dim, split, side = child._choose_split()
+                new_nodes = child._split(dim, split, side)
+                self.children += new_nodes
+            self.bounds = element.min_bb_with(self.bounds)
 
-    def choose_split(self):
+            if self.is_root and self.is_overfilled:
+                dim, split, side = self._choose_split()
+                new_nodes = self._split(dim, split, side)
+                new_root = RSNode(None, self.__tree)
+
+                new_root.bounds = element.min_bb_with(self.bounds)
+
+                new_nodes[0].parent = new_root
+                new_nodes[1].parent = new_root
+
+                new_root.children += new_nodes
+
+                new_root.__tree.root = new_root
+            return
+
+    def _choose_split(self) -> Tuple[int, int, int]:
         # chooses split composition of current node, assuming it is overcrowded
         # if internal node:
         if not self.is_leaf:
