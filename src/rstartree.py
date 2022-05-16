@@ -38,34 +38,6 @@ class RSNode:
         return self.bounds.__repr__() + ", leaf: " \
                + str(self.is_leaf) + ", children: " + str(len(self.children))
 
-    @property
-    def __lower(self):
-        return self.__tree.lower
-
-    @property
-    def __upper(self):
-        return self.__tree.upper
-
-    @property
-    def __shape(self):
-        return self.__tree.shape
-
-    @property
-    def is_leaf(self):
-        if not self.children:
-            return True
-        if isinstance(self.children[0], BoundingBox):
-            return True
-        return False
-
-    @property
-    def is_overfilled(self):
-        return self.children.__len__() >= self.__tree.upper
-
-    @property
-    def is_root(self):
-        return self.parent is None
-
     def _choose_subtree(self, element: Union[BoundingBox, Point]) -> 'RSNode':
         # compute covered, (checking if any entries fully cover the object)
         # if there is anything that does, choose the one with minimum volume or perimeter
@@ -322,6 +294,34 @@ class RSNode:
         z_score = (xi - mean) / sigma
         wf = ys * (np.exp(-1 * (z_score ** 2)) - y1)
         return wf
+
+    @property
+    def __lower(self):
+        return self.__tree.lower
+
+    @property
+    def __upper(self):
+        return self.__tree.upper
+
+    @property
+    def __shape(self):
+        return self.__tree.shape
+
+    @property
+    def is_leaf(self):
+        if not self.children:
+            return True
+        if isinstance(self.children[0], BoundingBox):
+            return True
+        return False
+
+    @property
+    def is_overfilled(self):
+        return self.children.__len__() >= self.__tree.upper
+
+    @property
+    def is_root(self):
+        return self.parent is None
 
     @staticmethod
     def __create_sc(arr: NDArray) -> NDArray[BoundingBox]:
