@@ -183,7 +183,7 @@ class RSNode:
     def query(self, element: BoundingBox):
         pass
 
-    def insert(self, element: Union[BoundingBox]) -> BoundingBox:
+    def insert(self, element: Union[BoundingBox]):
         # if node is leaf
         # add point to node list and update bounding box
         # check if split needed
