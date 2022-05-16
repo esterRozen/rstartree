@@ -138,7 +138,7 @@ class RSNode:
     def __check_coverage(self):
         pass
 
-    def __find_growth_overlap_perim(self):
+    def __find_growth_overlap_perimeter(self):
         pass
 
     def __check_node_one(self):
@@ -152,7 +152,8 @@ class RSNode:
 
     ##########################
 
-    def query(self, element: BoundingBox):
+    def query(self, element: BoundingBox) -> bool:
+        # TODO query
         pass
 
     def insert(self, element: Union[BoundingBox]):
