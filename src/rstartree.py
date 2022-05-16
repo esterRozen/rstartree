@@ -173,6 +173,10 @@ class RSNode:
                 self.parent.insert(element)
                 return
             else:
+                # should only happen a few times!
+                if self.is_underfilled:
+                    self.o_box = element.min_bb_with(self.bounds)
+
                 self.children += [element]
 
                 # bounds of element *with* own bounds deals
@@ -206,10 +210,14 @@ class RSNode:
         new_nodes[1].bounds = BoundingBox.create(
                 [child.bounds for child in new_nodes[1].children])
 
+        new_nodes[0].o_box = new_nodes[0].bounds
+        new_nodes[1].o_box = new_nodes[1].bounds
+
         if self.is_root:
             new_root = RSNode(None, self.__tree)
 
             new_root.bounds = self.bounds
+            new_root.o_box = self.bounds
 
             new_nodes[0].parent = new_root
             new_nodes[1].parent = new_root
@@ -272,7 +280,6 @@ class RSNode:
         the smallest split perimeter possible
         :return: Tuple of dimension and direction (top/bottom, 0/1)
         """
-
         best = None
         for dim in range(self.bounds.tops.shape[0]):
             top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
@@ -405,6 +412,10 @@ class RSNode:
     @property
     def is_overfilled(self):
         return self.children.__len__() >= self.__tree.upper
+
+    @property
+    def is_underfilled(self):
+        return self.children.__len__() < self.__tree.lower
 
     @property
     def is_root(self):
