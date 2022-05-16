@@ -371,9 +371,17 @@ class RStarTree:
         return self.root.__repr__()
 
     def insert(self, element: Union[BoundingBox, Point]):
-        bbox = self.root.insert(element)
+        self.root.insert(element)
 
-    def overflow_treatment(self):
+    # check if present
+    def query(self, element: Union[BoundingBox, Point]) -> bool:
+        return self.root.query(element)
+
+    def remove(self, element: Union[BoundingBox, Point]) -> bool:
+        pass
+
+    def nearest_neighbor(self, element: Union[BoundingBox, Point], k=1) -> \
+            List[Union[BoundingBox, Point]]:
         pass
 
 
