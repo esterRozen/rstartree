@@ -156,7 +156,14 @@ class RSNode:
         # TODO query
         pass
 
-    def insert(self, element: Union[BoundingBox]):
+    def insert(self, element: Union[BoundingBox, Point]) -> None:
+        """
+        inserts using heuristic function to choose path
+        to insert down
+        :param element: BBox or Point to be inserted in nearly
+        optimal location
+        """
+
         # if node is leaf
         # add point to node list and update bounding box
         # check if split needed
@@ -187,10 +194,11 @@ class RSNode:
                 self.bounds = element.min_bb_with(self.bounds)
                 return
 
-    def _split(self):
-        # still not 100% sure on this formatting...
-        # TODO split
-
+    def _split(self) -> None:
+        """
+        splits the current node. if root, will unseat current tree's root
+        :return: None
+        """
         new_nodes = self._split_in_two()
 
         if self.is_root:
@@ -213,10 +221,11 @@ class RSNode:
             self.parent.children += new_nodes
 
     def _split_in_two(self) -> List['RSNode']:
-        # chooses split composition of current node,
-        # assuming it is overcrowded
-
-        # must fix bounds of created nodes
+        """
+        chooses split composition of node currently inside,
+        assuming it is overcrowded
+        :return: 2 generic nodes with children of split node.
+        """
 
         # if internal node:
         if not self.is_leaf:
@@ -231,13 +240,17 @@ class RSNode:
             dim = self.__determine_dim()
             split = self.__minimize_on(dim)
 
-        pass
-        # TODO apply split
+    def __determine_dim(self) -> int:
+        """
+        provides the indexes of dimension with
+        the smallest split perimeter possible
+        :return: Tuple of dimension and direction (top/bottom, 0/1)
+        """
 
-    def __determine_dim(self):
-        # TODO output dim to split across
-        # minimize total perimeter of split candidates by dimension
-        pass
+        best = None
+        for dim in range(self.bounds.tops.shape[0]):
+            top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
+            bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
 
     def __minimize_on(self, dim):
         max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
