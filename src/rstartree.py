@@ -1,8 +1,7 @@
-#! /usr/bin/env python3
 """
 Rights to usage of this implementation and derivative works mine.
-Non-commercial rights granted, but may not deviate from same
-license in works based on this.
+Non-commercial rights granted, but works based on this may not
+deviate from a license at least as restrictive as this one
 
 Algorithm based on R* Tree improved method:
 https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.367.7273&rep=rep1&type=pdf
@@ -10,137 +9,16 @@ as well as original algorithm:
 https://infolab.usc.edu/csci599/Fall2001/paper/rstar-tree.pdf
 some r* tree algos which weren't majorly different
 from their r tree counterpart loosely based on:
-http://www.mathcs.emory.edu/~cheung/Courses/554/Syllabus/3-index/R-tree3.html
+https://www.mathcs.emory.edu/~cheung/Courses/554/Syllabus/3-index/R-tree3.html
 """
 import math
 from typing import List, Union, Tuple
-from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
+from .boundingbox import BoundingBox, Point
+
 eps = 0.001
-
-
-@dataclass
-class BoundingBox:
-    # points are abstracted as same top and bottom bounds
-    tops: NDArray[float]
-    bottoms: NDArray[float]
-
-    def __repr__(self):
-        return "tops: " + self.tops.__repr__()[6:-1] + ", bottoms: " + self.bottoms.__repr__()[6:-1]
-
-    def __copy__(self) -> 'BoundingBox':
-        return BoundingBox(self.tops, self.bottoms)
-
-    @staticmethod
-    def margin_of(box: Union['BoundingBox', None]) -> Union[float, None]:
-        if box is None:
-            return None
-        return 2 ** (len(box.tops) - 1) * np.sum(np.subtract(box.tops, box.bottoms))
-
-    @staticmethod
-    def volume_of(box: Union['BoundingBox', None]) -> Union[float, None]:
-        if box is None:
-            return None
-        return box.volume()
-
-    @staticmethod
-    def overlap_sc(box_1: 'BoundingBox', box_2: 'BoundingBox') -> Union['BoundingBox', None]:
-        bb_tops = np.minimum(box_1.tops, box_2.tops)
-        bb_bottoms = np.maximum(box_1.bottoms, box_2.bottoms)
-        if np.any(bb_tops < bb_bottoms):
-            return None
-        return BoundingBox(bb_tops, bb_bottoms)
-
-    @staticmethod
-    def create(bounds: List['BoundingBox']) -> 'BoundingBox':
-        bb_tops = np.max(np.stack([bound.tops for bound in bounds]), axis=0)
-        bb_bottoms = np.min(np.stack([bound.tops for bound in bounds]), axis=0)
-        return BoundingBox(bb_tops, bb_bottoms)
-
-    def is_same(self, other: 'BoundingBox') -> bool:
-        return np.all(self.tops == other.tops) and np.all(self.bottoms == other.bottoms)
-
-    def asymmetry(self, other: 'BoundingBox', dim: int):
-        # assumes this is the new one, other is original
-        return 2 * (other.center_along(dim) - self.center_along(dim)) / other.width(dim)
-
-    def center_along(self, dim: int):
-        return (self.tops[dim] + self.bottoms[dim]) / 2
-
-    def width(self, dim: int):
-        return self.tops[dim] - self.bottoms[dim]
-
-    @property
-    def center(self) -> float:
-        return np.divide(np.add(self.tops, self.bottoms), 2)
-
-    @property
-    def volume(self) -> float:
-        return float(np.prod(np.subtract(self.tops, self.bottoms)))
-
-    def volume_diff(self, other: 'BoundingBox') -> float:
-        return other.volume - self.volume
-
-    @property
-    def margin(self) -> float:
-        # n dimensional perimeter
-        return 2 ** (len(self.tops) - 1) * np.sum(np.subtract(self.tops, self.bottoms))
-
-    def margin_diff(self, other: 'BoundingBox') -> float:
-        return self.margin - other.margin
-
-    def overlap(self, box: 'BoundingBox') -> Union['BoundingBox', None]:
-        bb_tops = np.minimum(self.tops, box.tops)
-        bb_bottoms = np.maximum(self.bottoms, box.bottoms)
-        if np.any(bb_tops < bb_bottoms):
-            return None
-        return BoundingBox(bb_tops, bb_bottoms)
-
-    def overlap_margin(self, box: 'BoundingBox') -> float:
-        overlap = self.overlap(box)
-        if overlap is None:
-            return 0.0
-        return overlap.margin
-
-    def overlap_volume(self, box: 'BoundingBox') -> float:
-        overlap = self.overlap(box)
-        if overlap is None:
-            return 0.0
-        return overlap.volume()
-
-    def min_bb_with(self, box: Union[None, 'BoundingBox']) -> 'BoundingBox':
-        """
-        mininimum bounding box containing
-        :param box: element to preview adding
-        :return: BoundingBox
-        """
-        if box is None:
-            return self
-
-        tops = np.maximum(self.tops, box.tops)
-        bottoms = np.minimum(self.bottoms, box.bottoms)
-        return BoundingBox(tops, bottoms)
-
-    def encloses(self, box: 'BoundingBox') -> bool:
-        # faster than checking if the bounding volume changes
-        return np.all(self.bottoms < box.bottoms) and np.all(box.tops < self.tops)
-
-
-@dataclass
-class Point(BoundingBox):
-    # idiomatically communicate this is a point
-    def __init__(self, point: NDArray):
-        self.tops = point
-        self.bottoms = point
-        self.point = point
-
-    def __repr__(self):
-        return "Point: " + self.point.__repr__()[6:-1]
-
-    def __copy__(self) -> 'Point':
-        return Point(self.tops)
 
 
 # noinspection SpellCheckingInspection
@@ -186,9 +64,11 @@ class RSNode:
         for node in self.children:
             if node.bounds.encloses(element):
                 covering_nodes += [node]
+
+        # if any in covering nodes
         if covering_nodes:
             idx = np.argmin(list(map(
-                lambda covering_node: covering_node.bounds.volume(),
+                lambda covering_node: covering_node.bounds.volume,
                 covering_nodes
             )))
             return covering_nodes[idx]
@@ -199,7 +79,9 @@ class RSNode:
         # sort in ascending order of the amount each would grow in perimeter
         E: List[RSNode] = [child for child in self.children]
         perim_change = [node.bounds.min_bb_with(element).margin_diff(node.bounds) for node in E]
-        E_sorted: List[Tuple[float, RSNode]] = sorted(zip(perim_change, E), key=lambda tup: tup[0], reverse=False)
+        E_sorted: List[Tuple[float, RSNode]] = sorted(
+                zip(perim_change, E),
+                key=lambda tup: tup[0], reverse=False)
         E: NDArray[Union[float, RSNode]] = np.array([[x, y] for x, y in E_sorted])
         perim_change, E = (E[:, 0].tolist(), E[:, 1].tolist())
 
@@ -212,11 +94,11 @@ class RSNode:
 
         all_valid = True
         last_idx = 0  # for next section
-        for i, node in enumerate(E[1:]):
+        for i, remaining in enumerate(E[1:]):
             # offset by 1 due to enumeration and
             # offset by 1 due to list slicing
             idx = i + 2
-            n_bb = node.bounds
+            n_bb = remaining.bounds
             if n_bb.overlap_margin(bb_with_obj) - n_bb.overlap_margin(bb) > eps:
                 all_valid = False
                 # seek last idk where increase in overlap is above 0
@@ -260,7 +142,7 @@ class RSNode:
 
         # during traversal, all indices are added to candidate list. If depth search not successful,
         # use index which has minimum increase in overlap
-        if np.any(np.array(list(map(lambda node: node.bounds.min_bb_with(element).volume(), E))) < eps):
+        if np.any(np.array(list(map(lambda cand: cand.bounds.min_bb_with(element).volume, E))) < eps):
             c = check_comp(element, E, 1, candidates, "perim")
         else:
             c = check_comp(element, E, 1, candidates, "vol")
@@ -270,7 +152,26 @@ class RSNode:
         else:
             return E[np.argmin(del_overlap)]
 
-    def update_parent_bounds(self, bounds: Union[BoundingBox, Point]):
+    ##########################
+    # choose subtree functions.
+    def _check_coverage(self):
+        pass
+
+    def _find_growth_overlap_perim(self):
+        pass
+
+    def _check_node_one(self):
+        pass
+
+    def _consider_candidates(self):
+        pass
+
+    def _best_candidate(self):
+        pass
+
+    ##########################
+
+    def _update_parent_bounds(self, bounds: Union[BoundingBox, Point]):
         if self.parent is not None:
             if self.parent.bounds is None:
                 self.parent.bounds = bounds
@@ -286,7 +187,7 @@ class RSNode:
                 self.children += [element]
                 self.bounds = element.min_bb_with(self.bounds)
                 # update parent's bounds
-                self.update_parent_bounds(element)
+                self._update_parent_bounds(element)
 
             # splitting a node reduces its bounds, but does not
             # make the bounds of parent nodes any smaller
@@ -300,7 +201,7 @@ class RSNode:
             child = self.choose_subtree(element)
             bounds = child.insert(element)
             self.bounds = self.bounds.min_bb_with(bounds)
-            self.update_parent_bounds(element)
+            self._update_parent_bounds(element)
             if len(self.children) == self.__upper:
                 self.choose_split()
             return self.bounds
@@ -320,16 +221,17 @@ class RSNode:
             dim = self._determine_dim()
             split = self._minimize_on(dim)
 
+        pass
         # TODO apply split
 
     def split(self, dim: int, idx: int, side: int):
-        # still not 100% sure on this formatting..
+        # still not 100% sure on this formatting...
         pass
 
     def _determine_dim(self):
         # TODO output dim to split across
         # minimize total perimeter of split candidates by dimension
-        return NotImplemented
+        pass
 
     def _minimize_on(self, dim):
         max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
@@ -440,9 +342,7 @@ class RStarTree:
 
 
 if __name__ == "__main__":
-    lower = 1
-    upper = 4
-    rtree = RStarTree(lower=lower, upper=upper)
+    rtree = RStarTree(lower=1, upper=4)
     cnode_1 = RSNode(rtree.root, rtree)
     cnode_1.insert(Point(np.array([3, 5])))
     cnode_2 = RSNode(rtree.root, rtree)
