@@ -180,12 +180,8 @@ class RSNode:
 
     ##########################
 
-    def _update_parent_bounds(self, bounds: Union[BoundingBox, Point]):
-        if self.parent is not None:
-            if self.parent.bounds is None:
-                self.parent.bounds = bounds
-            else:
-                self.parent.bounds = self.parent.bounds.min_bb_with(bounds)
+    def query(self, element: BoundingBox):
+        pass
 
     def insert(self, element: Union[BoundingBox]) -> BoundingBox:
         # if node is leaf
