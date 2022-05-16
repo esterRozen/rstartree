@@ -209,10 +209,6 @@ class RSNode:
         pass
         # TODO apply split
 
-    def _split(self, dim: int, idx: int, side: int) -> List['RSNode']:
-        # still not 100% sure on this formatting...
-        pass
-
     def __determine_dim(self):
         # TODO output dim to split across
         # minimize total perimeter of split candidates by dimension
