@@ -242,8 +242,7 @@ class RSNode:
 
         # if internal node:
         if self.is_leaf:
-            # TODO choose best among splits
-            # only determine likely good split dimension
+            # consider only one dim for leaf
             dim = self.__determine_dim()
             best = self.__minimize_on(dim)
         else:
@@ -261,17 +260,14 @@ class RSNode:
             node_sort = sorted(self.children, key=lambda node: node.bottoms[dim])
         else:
             node_sort = sorted(self.children, key=lambda node: node.tops[dim])
+
         new_nodes[0].children = node_sort[:best[0]]
         new_nodes[1].children = node_sort[best[0]:]
 
-        # fix bounds
-        new_nodes[0].bounds = BoundingBox.create(node_sort[:best[0]])
-        new_nodes[1].bounds = BoundingBox.create(node_sort[best[0]:])
-
         # testing stuff!!
-        new_nodes = [RSNode(None, self.__tree), RSNode(None, self.__tree)]
-        new_nodes[0].children = self.children[0:2]
-        new_nodes[1].children = self.children[2:]
+        # new_nodes = [RSNode(None, self.__tree), RSNode(None, self.__tree)]
+        # new_nodes[0].children = self.children[0:2]
+        # new_nodes[1].children = self.children[2:]
         return new_nodes
 
     def __determine_dim(self) -> int:
@@ -358,7 +354,7 @@ class RSNode:
         indexes = np.abs(margin_overlap_sc) < eps
         wg = np.put(wg, indexes, wg_alt[indexes])
         # should give the best split candidate
-        return sc[np.unravel_index(np.argmin(wg), wg.shape)]
+        return sc_i[np.unravel_index(np.argmin(wg), wg.shape)]
 
     def __compute_wf(self, dim: int, sc: List[List[List[BoundingBox]]]):
         # dim 0: split candidate index
