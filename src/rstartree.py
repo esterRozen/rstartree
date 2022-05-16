@@ -233,17 +233,23 @@ class RSNode:
         """
 
         # if internal node:
-        if not self.is_leaf:
-            # consider all dimensions
-            splits = []
-            for dim in range(len(self.bounds.tops.shape)):
-                splits += [self.__minimize_on(dim)]
-            # TODO choose best among splits
-
         if self.is_leaf:
+            # TODO choose best among splits
             # only determine likely good split dimension
             dim = self.__determine_dim()
-            split = self.__minimize_on(dim)
+            split = [self.__minimize_on(dim)]
+        else:
+            # consider all dimensions
+            splits = []
+            for dim in range(self.bounds.tops.shape[0]):
+                splits += [self.__minimize_on(dim)]
+
+
+        # testing stuff!!
+        new_nodes = [RSNode(None, self.__tree), RSNode(None, self.__tree)]
+        new_nodes[0].children = self.children[0:2]
+        new_nodes[1].children = self.children[2:]
+        return new_nodes
 
     def __determine_dim(self) -> int:
         """
