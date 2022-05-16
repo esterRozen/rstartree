@@ -305,16 +305,16 @@ class RSNode:
         top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
         bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
 
-        sc_i: List[BoundingBox] = []
+        sc_i: List[List[List[BoundingBox]]] = []
         for idx in range(self.__lower, self.__upper - self.__lower + 1):
-            sc = self.__create_sc_bounds(top_bbs, idx)
-            sc_i +=
-        sc_i: NDArray[BoundingBox] = np.split(
-                np.stack([top_bbs, bot_bbs], axis=0),
-                np.arange(self.__lower, self.__upper - self.__lower + 1), axis=1)
+            sc = [top_bbs[:idx], top_bbs[idx:]]
+            sc_bounds = [self.__create_sc_bounds(top_bbs, idx)]
 
-        sc = np.apply_along_axis(self.__create_sc, sc_i, axes=0)
-        wf = self.__compute_wf(dim, sc)
+            sc_bounds += [self.__create_sc_bounds(bot_bbs, idx)]
+
+            sc_i += sc_bounds
+
+        wf = self.__compute_wf(dim, sc_i)
         # dim 0: different split indexes
         # dim 1: top vs bottom
         # dim 2: sc_1, sc_2
@@ -328,7 +328,7 @@ class RSNode:
                                                         bbox.margin,
                                                         axis=0, arr=block),
                                                 axis=0),
-                                        axis=0, arr=sc)
+                                        axis=0, arr=sc_i)
 
         # overlap of bounding box pairs sc_1 and sc_2
         overlap_sc = np.apply_along_axis(lambda block:
@@ -336,7 +336,7 @@ class RSNode:
                                                  lambda pair:
                                                  BoundingBox.overlap_sc(pair[0], pair[1]),
                                                  axis=0, arr=block),
-                                         axis=0, arr=sc)
+                                         axis=0, arr=sc_i)
 
         # margin of overlap of box pairs
         margin_overlap_sc = np.apply_along_axis(lambda vector:
@@ -353,7 +353,7 @@ class RSNode:
         # should give the best split candidate
         return sc[np.unravel_index(np.argmin(wg), wg.shape)]
 
-    def __compute_wf(self, dim: int, sc: NDArray[BoundingBox]):
+    def __compute_wf(self, dim: int, sc: List[List[List[BoundingBox]]]):
         # dim 0: split candidate index
         # dim 1: top vs bottom
         # dim 2: sc_1, sc_2
@@ -411,8 +411,9 @@ class RSNode:
         return self.parent is None
 
     @staticmethod
-    def __create_sc_bounds(splits: List[List[BoundingBox]], idx: int) -> List[BoundingBox]:
-        sc = [splits[0:idx], splits[idx:]]
+    def __create_sc_bounds(splits: List[List[BoundingBox]], idx: int) -> \
+            List[BoundingBox]:
+        sc = [splits[:idx], splits[idx:]]
         return [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
 
 
