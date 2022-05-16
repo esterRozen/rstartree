@@ -201,6 +201,11 @@ class RSNode:
         """
         new_nodes = self._split_in_two()
 
+        new_nodes[0].bounds = BoundingBox.create(
+                [child.bounds for child in new_nodes[0].children])
+        new_nodes[1].bounds = BoundingBox.create(
+                [child.bounds for child in new_nodes[1].children])
+
         if self.is_root:
             new_root = RSNode(None, self.__tree)
 
