@@ -225,27 +225,27 @@ class RSNode:
             # consider all dimensions
             splits = []
             for dim in range(len(self.bounds.tops.shape)):
-                splits += [self._minimize_on(dim)]
+                splits += [self.__minimize_on(dim)]
             # TODO choose best among splits
 
         if self.is_leaf:
             # only determine likely good split dimension
-            dim = self._determine_dim()
-            split = self._minimize_on(dim)
+            dim = self.__determine_dim()
+            split = self.__minimize_on(dim)
 
         pass
         # TODO apply split
 
-    def split(self, dim: int, idx: int, side: int):
+    def _split(self, dim: int, idx: int, side: int) -> List['RSNode']:
         # still not 100% sure on this formatting...
         pass
 
-    def _determine_dim(self):
+    def __determine_dim(self):
         # TODO output dim to split across
         # minimize total perimeter of split candidates by dimension
         pass
 
-    def _minimize_on(self, dim):
+    def __minimize_on(self, dim):
         max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
 
         top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
@@ -255,7 +255,7 @@ class RSNode:
             np.arange(self.__lower, self.__upper - self.__lower), axis=1)
 
         sc = np.apply_along_axis(self.__create_sc, sc_i, axes=0)
-        wf = self._compute_wf(dim, sc)
+        wf = self.__compute_wf(dim, sc)
         # dim 0: different split indexes
         # dim 1: top vs bottom
         # dim 2: sc_1, sc_2
@@ -294,7 +294,7 @@ class RSNode:
         # should give the
         return sc[np.unravel_index(np.argmin(wg), wg.shape)]
 
-    def _compute_wf(self, dim: int, sc: NDArray[BoundingBox]):
+    def __compute_wf(self, dim: int, sc: NDArray[BoundingBox]):
         # dim 0: split candidate index
         # dim 1: top vs bottom
         # dim 2: sc_1, sc_2
