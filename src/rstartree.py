@@ -283,13 +283,20 @@ class RSNode:
         :param dim: dimension minimized over
         :return: Tuple with: idx, top/bottom (0/1), cost
         """
+
+        # always assume you are in the node that is being split!
         max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
 
         top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
         bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
+
+        sc_i: List[BoundingBox] = []
+        for idx in range(self.__lower, self.__upper - self.__lower + 1):
+            sc = self.__create_sc_bounds(top_bbs, idx)
+            sc_i +=
         sc_i: NDArray[BoundingBox] = np.split(
                 np.stack([top_bbs, bot_bbs], axis=0),
-                np.arange(self.__lower, self.__upper - self.__lower), axis=1)
+                np.arange(self.__lower, self.__upper - self.__lower + 1), axis=1)
 
         sc = np.apply_along_axis(self.__create_sc, sc_i, axes=0)
         wf = self.__compute_wf(dim, sc)
