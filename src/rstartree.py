@@ -163,19 +163,19 @@ class RSNode:
 
     ##########################
     # choose subtree functions.
-    def _check_coverage(self):
+    def __check_coverage(self):
         pass
 
-    def _find_growth_overlap_perim(self):
+    def __find_growth_overlap_perim(self):
         pass
 
-    def _check_node_one(self):
+    def __check_node_one(self):
         pass
 
-    def _consider_candidates(self):
+    def __consider_candidates(self):
         pass
 
-    def _best_candidate(self):
+    def __best_candidate(self):
         pass
 
     ##########################
