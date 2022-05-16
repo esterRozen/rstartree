@@ -12,7 +12,7 @@ from their r tree counterpart loosely based on:
 https://www.mathcs.emory.edu/~cheung/Courses/554/Syllabus/3-index/R-tree3.html
 """
 import math
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Optional
 import numpy as np
 from numpy.typing import NDArray
 
@@ -237,13 +237,28 @@ class RSNode:
             # TODO choose best among splits
             # only determine likely good split dimension
             dim = self.__determine_dim()
-            split = [self.__minimize_on(dim)]
+            best = self.__minimize_on(dim)
         else:
             # consider all dimensions
-            splits = []
+            best: Optional[Tuple[int, int, float]] = None
             for dim in range(self.bounds.tops.shape[0]):
-                splits += [self.__minimize_on(dim)]
+                split = self.__minimize_on(dim)
+                if best is None or split[2] < best[2]:
+                    best = split
 
+        new_nodes = [RSNode(None, self.__tree), RSNode(None, self.__tree)]
+
+        # check direction
+        if best[1]:
+            node_sort = sorted(self.children, key=lambda node: node.bottoms[dim])
+        else:
+            node_sort = sorted(self.children, key=lambda node: node.tops[dim])
+        new_nodes[0].children = node_sort[:best[0]]
+        new_nodes[1].children = node_sort[best[0]:]
+
+        # fix bounds
+        new_nodes[0].bounds = BoundingBox.create(node_sort[:best[0]])
+        new_nodes[1].bounds = BoundingBox.create(node_sort[best[0]:])
 
         # testing stuff!!
         new_nodes = [RSNode(None, self.__tree), RSNode(None, self.__tree)]
