@@ -257,7 +257,28 @@ class RSNode:
             top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
             bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
 
-    def __minimize_on(self, dim):
+            sc_i: List[List[BoundingBox]] = []
+            for idx in range(self.__lower, self.__upper - self.__lower + 1):
+                sc = [top_bbs[0:idx], top_bbs[idx:]]
+                sc = [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
+                sc_i += [sc[0].margin + sc[1].margin]
+
+                sc = [bot_bbs[0:idx], bot_bbs[idx:]]
+                sc = [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
+                sc_i += [sc[0].margin + sc[1].margin]
+
+            minimum = np.argmin(sc_i)
+            if best is None or sc_i[minimum] < best[1]:
+                best = (dim, sc_i[minimum])
+
+        return best[0]
+
+    def __minimize_on(self, dim: int) -> Tuple[int, int, float]:
+        """
+        provides best split candidate of a node for a given dimension
+        :param dim: dimension minimized over
+        :return: Tuple displaying: int, top/bottom (0/1), score
+        """
         max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
 
         top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
