@@ -265,12 +265,10 @@ class RSNode:
 
             sc_i: List[List[BoundingBox]] = []
             for idx in range(self.__lower, self.__upper - self.__lower + 1):
-                sc = [top_bbs[0:idx], top_bbs[idx:]]
-                sc = [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
+                sc = self.__create_sc_bounds(top_bbs, idx)
                 sc_i += [sc[0].margin + sc[1].margin]
 
-                sc = [bot_bbs[0:idx], bot_bbs[idx:]]
-                sc = [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
+                sc = self.__create_sc_bounds(bot_bbs, idx)
                 sc_i += [sc[0].margin + sc[1].margin]
 
             minimum = np.argmin(sc_i)
@@ -391,13 +389,9 @@ class RSNode:
         return self.parent is None
 
     @staticmethod
-    def __create_sc(arr: NDArray) -> NDArray[BoundingBox]:
-        return np.array([
-            [BoundingBox.create(arr[0][0, :]),
-             BoundingBox.create(arr[1][0, :])],
-            [BoundingBox.create(arr[0][1, :]),
-             BoundingBox.create(arr[1][1, :])]
-        ])
+    def __create_sc_bounds(splits: List[List[BoundingBox]], idx: int) -> List[BoundingBox]:
+        sc = [splits[0:idx], splits[idx:]]
+        return [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
 
 
 class RStarTree:
