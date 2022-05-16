@@ -31,7 +31,7 @@ class RSNode:
         self.bounds: Union[BoundingBox, None] = None
         self.children: List[Union['RSNode', BoundingBox]] = []
         self.o_box: Union[BoundingBox, None] = None
-        # TODO remove this
+        # TODO remove this. it's terrible
         self._success = False
 
     def __repr__(self):
@@ -281,7 +281,7 @@ class RSNode:
         """
         provides best split candidate of a node for a given dimension
         :param dim: dimension minimized over
-        :return: Tuple displaying: int, top/bottom (0/1), score
+        :return: Tuple with: idx, top/bottom (0/1), cost
         """
         max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
 
@@ -328,7 +328,7 @@ class RSNode:
 
         indexes = np.abs(margin_overlap_sc) < eps
         wg = np.put(wg, indexes, wg_alt[indexes])
-        # should give the
+        # should give the best split candidate
         return sc[np.unravel_index(np.argmin(wg), wg.shape)]
 
     def __compute_wf(self, dim: int, sc: NDArray[BoundingBox]):
