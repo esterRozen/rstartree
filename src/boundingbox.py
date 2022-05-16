@@ -18,7 +18,8 @@ class BoundingBox:
     bottoms: NDArray[float]
 
     def __repr__(self):
-        return "tops: " + self.tops.__repr__()[6:-1] + ", bottoms: " + self.bottoms.__repr__()[6:-1]
+        return "tops: " + self.tops.__repr__()[6:-1] \
+               + ", bottoms: " + self.bottoms.__repr__()[6:-1]
 
     def __copy__(self) -> 'BoundingBox':
         return BoundingBox(self.tops, self.bottoms)
@@ -36,7 +37,8 @@ class BoundingBox:
         return 2 ** (len(box.tops) - 1) * np.sum(np.subtract(box.tops, box.bottoms))
 
     @staticmethod
-    def overlap_sc(box_1: 'BoundingBox', box_2: 'BoundingBox') -> Union['BoundingBox', None]:
+    def overlap_sc(box_1: 'BoundingBox', box_2: 'BoundingBox') -> \
+            Union['BoundingBox', None]:
         bb_tops = np.minimum(box_1.tops, box_2.tops)
         bb_bottoms = np.maximum(box_1.bottoms, box_2.bottoms)
         if np.any(bb_tops < bb_bottoms):
@@ -67,7 +69,9 @@ class BoundingBox:
 
     def asymmetry(self, other: 'BoundingBox', dim: int):
         # assumes this is the new one, other is original
-        return 2 * (other.center_along(dim) - self.center_along(dim)) / other.width(dim)
+        other_center = other.center_along(dim)
+        self_center = self.center_along(dim)
+        return 2 * (other_center - self_center) / other.width(dim)
 
     def center_along(self, dim: int):
         return (self.tops[dim] + self.bottoms[dim]) / 2
