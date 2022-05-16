@@ -77,8 +77,8 @@ class RSNode:
         # if any in covering nodes
         if covering_nodes:
             idx = np.argmin(list(map(
-                lambda covering_node: covering_node.bounds.volume,
-                covering_nodes
+                    lambda covering_node: covering_node.bounds.volume,
+                    covering_nodes
             )))
             return covering_nodes[idx]
 
@@ -251,8 +251,8 @@ class RSNode:
         top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
         bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
         sc_i: NDArray[BoundingBox] = np.split(
-            np.stack([top_bbs, bot_bbs], axis=0),
-            np.arange(self.__lower, self.__upper - self.__lower), axis=1)
+                np.stack([top_bbs, bot_bbs], axis=0),
+                np.arange(self.__lower, self.__upper - self.__lower), axis=1)
 
         sc = np.apply_along_axis(self.__create_sc, sc_i, axes=0)
         wf = self.__compute_wf(dim, sc)
@@ -264,27 +264,27 @@ class RSNode:
         # margin of bounding box pairs sc_1 and sc_2
         margin_sc = np.apply_along_axis(lambda block:
                                         np.sum(
-                                            np.apply_along_axis(
-                                                lambda bbox:
-                                                bbox.margin,
-                                                axis=0, arr=block),
-                                            axis=0),
+                                                np.apply_along_axis(
+                                                        lambda bbox:
+                                                        bbox.margin,
+                                                        axis=0, arr=block),
+                                                axis=0),
                                         axis=0, arr=sc)
 
         # overlap of bounding box pairs sc_1 and sc_2
         overlap_sc = np.apply_along_axis(lambda block:
                                          np.apply_along_axis(
-                                             lambda pair:
-                                             BoundingBox.overlap_sc(pair[0], pair[1]),
-                                             axis=0, arr=block),
+                                                 lambda pair:
+                                                 BoundingBox.overlap_sc(pair[0], pair[1]),
+                                                 axis=0, arr=block),
                                          axis=0, arr=sc)
 
         # margin of overlap of box pairs
         margin_overlap_sc = np.apply_along_axis(lambda vector:
                                                 np.apply_along_axis(
-                                                    lambda bbox:
-                                                    bbox.margin,
-                                                    axis=0, arr=vector),
+                                                        lambda bbox:
+                                                        bbox.margin,
+                                                        axis=0, arr=vector),
                                                 axis=0, arr=overlap_sc)
         wg: NDArray = np.multiply(margin_sc - max_perim, wf)
         wg_alt: NDArray = np.divide(margin_overlap_sc, wf)
@@ -299,26 +299,28 @@ class RSNode:
         # dim 1: top vs bottom
         # dim 2: sc_1, sc_2
         asym = np.apply_along_axis(
-            lambda split:
-            np.apply_along_axis(
-                lambda side:
+                lambda split:
                 np.apply_along_axis(
-                    lambda box:
-                    self.bounds.asymmetry(box, dim),
-                    axis=0, arr=side),
-                axis=0, arr=split),
-            axis=0, arr=sc)
+                        lambda side:
+                        np.apply_along_axis(
+                                lambda box:
+                                self.bounds.asymmetry(box, dim),
+                                axis=0, arr=side),
+                        axis=0, arr=split),
+                axis=0, arr=sc)
 
-        mean = (1 - self.__lower/(self.__upper + 1)) * asym
+        mean = (1 - self.__lower / (self.__upper + 1)) * asym
         sigma = self.__shape * (1 + np.abs(mean))
         # y offset
-        y1 = math.exp(-1/(self.__shape**2))
+        y1 = math.exp(-1 / (self.__shape ** 2))
         # y scaling
-        ys = 1/(1 - y1)
-        xi = 2*np.arange(self.__lower, self.__upper-self.__lower+1)/(self.__upper+1) - 1
+        ys = 1 / (1 - y1)
+        num = 2 * np.arange(self.__lower,
+                            self.__upper - self.__lower + 1)
+        xi = num / (self.__upper + 1) - 1
 
-        z_score = (xi - mean)/sigma
-        wf = ys*(np.exp(-1*(z_score**2)) - y1)
+        z_score = (xi - mean) / sigma
+        wf = ys * (np.exp(-1 * (z_score ** 2)) - y1)
         return wf
 
     @staticmethod
