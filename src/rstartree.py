@@ -161,38 +161,63 @@ class RSNode:
         # add point to node list and update bounding box
         # check if split needed
         if self.is_leaf:
-            if len(self.children) < self.__upper:
+            if self.is_overfilled:
+                self._split()
+                self.parent.insert(element)
+                return
+            else:
                 self.children += [element]
+
+                # bounds of element *with* own bounds deals
+                # with issue where self.bounds is None
                 self.bounds = element.min_bb_with(self.bounds)
-            return
+                return
+
         else:
             # else:
             # insert to child node
-            child = self._choose_subtree(element)
-            child.insert(element)
-            if child.is_overfilled:
-                dim, split, side = child._choose_split()
-                new_nodes = child._split(dim, split, side)
-                self.children += new_nodes
-            self.bounds = element.min_bb_with(self.bounds)
+            if self.is_overfilled:
+                self._split()
+                self.parent.insert(element)
+                return
+            else:
+                child = self._choose_subtree(element)
+                child.insert(element)
 
-            if self.is_root and self.is_overfilled:
-                dim, split, side = self._choose_split()
-                new_nodes = self._split(dim, split, side)
-                new_root = RSNode(None, self.__tree)
+                self.bounds = element.min_bb_with(self.bounds)
+                return
 
-                new_root.bounds = element.min_bb_with(self.bounds)
+    def _split(self):
+        # still not 100% sure on this formatting...
+        # TODO split
 
-                new_nodes[0].parent = new_root
-                new_nodes[1].parent = new_root
+        new_nodes = self._split_in_two()
 
-                new_root.children += new_nodes
+        if self.is_root:
+            new_root = RSNode(None, self.__tree)
 
-                new_root.__tree.root = new_root
-            return
+            new_root.bounds = self.bounds
 
-    def _choose_split(self) -> Tuple[int, int, int]:
-        # chooses split composition of current node, assuming it is overcrowded
+            new_nodes[0].parent = new_root
+            new_nodes[1].parent = new_root
+
+            new_root.children = new_nodes
+
+            new_root.__tree.root = new_root
+        else:
+            self.parent.children.remove(self)
+
+            new_nodes[0].parent = self.parent
+            new_nodes[1].parent = self.parent
+
+            self.parent.children += new_nodes
+
+    def _split_in_two(self) -> List['RSNode']:
+        # chooses split composition of current node,
+        # assuming it is overcrowded
+
+        # must fix bounds of created nodes
+
         # if internal node:
         if not self.is_leaf:
             # consider all dimensions
