@@ -403,6 +403,20 @@ class RSNode:
         return self.__tree.shape
 
     @property
+    def height(self):
+        if self.is_leaf:
+            return 1
+        else:
+            return 1 + self.children[0].height
+
+    @property
+    def depth(self):
+        if self.is_root:
+            return 0
+        else:
+            return 1 + self.parent.depth
+
+    @property
     def is_leaf(self):
         if not self.children:
             return True
@@ -457,6 +471,10 @@ class RStarTree:
     def nearest_neighbor(self, element: Union[BoundingBox, Point], k=1) -> \
             List[Union[BoundingBox, Point]]:
         pass
+
+    @property
+    def height(self):
+        return self.root.height
 
 
 if __name__ == "__main__":
