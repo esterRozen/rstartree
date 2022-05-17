@@ -16,6 +16,7 @@ class BoundingBox:
     # points are abstracted as same top and bottom bounds
     tops: NDArray[float]
     bottoms: NDArray[float]
+    obj = None
 
     def __repr__(self):
         return "tops: " + self.tops.__repr__()[6:-1] \
