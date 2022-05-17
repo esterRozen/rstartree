@@ -23,13 +23,17 @@ eps = 0.001
 
 # noinspection SpellCheckingInspection
 class RSNode:
-    def __init__(self, parent, tree: 'RStarTree', shape=0.5):
-        # can access global parameters
+    def __init__(self, parent, tree: 'RStarTree'):
+        # used to access global parameters
         self.__tree = tree
         self.parent: 'RSNode' = parent
 
         self.bounds: Union[BoundingBox, None] = None
         self.children: List[Union['RSNode', BoundingBox]] = []
+
+        # first instantiation (for inner nodes)
+        # (or first time a leaf node has over m objects)
+        # TODO deal with root node not having o_box
         self.o_box: Union[BoundingBox, None] = None
         # TODO remove this. it's terrible
         self._success = False
@@ -174,6 +178,7 @@ class RSNode:
                 return
             else:
                 # should only happen a few times!
+                # (may happen if elements are removed from a node)
                 if self.is_underfilled:
                     self.o_box = element.min_bb_with(self.bounds)
 
@@ -325,29 +330,29 @@ class RSNode:
         # inner apply: over different bounding box positions
         # margin of bounding box pairs sc_1 and sc_2
         margin_sc = np.apply_along_axis(lambda block:
-                                        np.sum(
-                                                np.apply_along_axis(
-                                                        lambda bbox:
-                                                        bbox.margin,
-                                                        axis=0, arr=block),
-                                                axis=0),
+                                        np.sum(np.apply_along_axis(
+                                                    lambda bbox:
+                                                    bbox.margin,
+                                                    axis=0, arr=block),
+                                               axis=0),
                                         axis=0, arr=sc_i)
 
         # overlap of bounding box pairs sc_1 and sc_2
         overlap_sc = np.apply_along_axis(lambda block:
                                          np.apply_along_axis(
-                                                 lambda pair:
-                                                 BoundingBox.overlap_sc(pair[0], pair[1]),
-                                                 axis=0, arr=block),
+                                             lambda pair:
+                                             BoundingBox.overlap_sc(pair[0], pair[1]),
+                                             axis=0, arr=block),
                                          axis=0, arr=sc_i)
 
         # margin of overlap of box pairs
         margin_overlap_sc = np.apply_along_axis(lambda vector:
                                                 np.apply_along_axis(
-                                                        lambda bbox:
-                                                        bbox.margin,
-                                                        axis=0, arr=vector),
+                                                    lambda bbox:
+                                                    bbox.margin,
+                                                    axis=0, arr=vector),
                                                 axis=0, arr=overlap_sc)
+
         wg: NDArray = np.multiply(margin_sc - max_perim, wf)
         wg_alt: NDArray = np.divide(margin_overlap_sc, wf)
 
