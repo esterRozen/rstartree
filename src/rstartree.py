@@ -515,15 +515,28 @@ class RStarTree:
     def upper(self):
         return self.__upper
 
-    # check if present
-    def query(self, element: Union[BoundingBox, Point]) -> bool:
+    @property
+    def shape(self):
+        return self.__shape
+
+    @property
+    def height(self):
+        return self.root.height
+
+    def query(self, element: BoundingBox) -> bool:
+        # check if present
         return self.root.query(element)
 
-    def remove(self, element: Union[BoundingBox, Point]) -> bool:
+    # setters
+    def insert(self, element: BoundingBox):
+        self.root.insert(element)
+
+    def remove(self, element: BoundingBox) -> bool:
         pass
 
-    def nearest_neighbor(self, element: Union[BoundingBox, Point], k=1) -> \
-            List[Union[BoundingBox, Point]]:
+    # more complex queries
+    def nearest_neighbor(self, element: BoundingBox, k=1) -> \
+            List[BoundingBox]:
         pass
 
     @property
