@@ -228,9 +228,9 @@ class RSNode:
             return c
         else:
             return E[np.argmin(del_overlap)]
-
     ##########################
     # choose subtree functions.
+
     def __check_coverage(self):
         pass
 
@@ -247,53 +247,7 @@ class RSNode:
         pass
 
     ##########################
-
-    def query(self, element: BoundingBox) -> bool:
-        # TODO query
-        pass
-
-    def insert(self, element: Union[BoundingBox, Point]) -> None:
-        """
-        inserts using heuristic function to choose path
-        to insert down
-        :param element: BBox or Point to be inserted in nearly
-        optimal location
-        """
-
-        # if node is leaf
-        # add point to node list and update bounding box
-        # check if split needed
-        if self.is_leaf:
-            if self.is_overfilled:
-                self._split()
-                self.parent.insert(element)
-                return
-            else:
-                # should only happen a few times!
-                # (may happen if elements are removed from a node)
-                if self.is_underfilled:
-                    self.o_box = element.min_bb_with(self.bounds)
-
-                self.children += [element]
-
-                # bounds of element *with* own bounds deals
-                # with issue where self.bounds is None
-                self.bounds = element.min_bb_with(self.bounds)
-                return
-
-        else:
-            # else:
-            # insert to child node
-            if self.is_overfilled:
-                self._split()
-                self.parent.insert(element)
-                return
-            else:
-                child = self._choose_subtree(element)
-                child.insert(element)
-
-                self.bounds = element.min_bb_with(self.bounds)
-                return
+    # Split
 
     def _split(self) -> None:
         """
@@ -482,6 +436,7 @@ class RSNode:
         wf = ys * (np.exp(-1 * (z_score ** 2)) - y1)
         return wf
 
+    # internal properties
     @property
     def __lower(self):
         return self.__tree.lower
