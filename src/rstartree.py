@@ -315,10 +315,6 @@ class RSNode:
         new_nodes[0].children = node_sort[:best[0]]
         new_nodes[1].children = node_sort[best[0]:]
 
-        # testing stuff!!
-        # new_nodes = [RSNode(None, self.__tree), RSNode(None, self.__tree)]
-        # new_nodes[0].children = self.children[0:2]
-        # new_nodes[1].children = self.children[2:]
         return new_nodes
 
     def __sort_nodes_over(self, dim: int) -> Tuple[List[BoundingBox], List[BoundingBox]]:
@@ -453,7 +449,7 @@ class RSNode:
 
 class RStarTree:
     def __init__(self, lower=4, upper=50, shape=0.5):
-        # maintain invariants by preventing these from being changed
+        # helps maintain invariants by preventing these from being changed
         self.__lower = lower
         self.__upper = upper
         self.__shape = shape
@@ -463,6 +459,7 @@ class RStarTree:
         # non-leaf nodes have between lower and upper # of children unless root
         # all leaf nodes have between m and M entries unless root
         # all leaves at same depth.
+        # (the tree can only grow in depth from the root, which makes it easier)
 
     def __repr__(self):
         return self.root.__repr__()
@@ -499,10 +496,6 @@ class RStarTree:
     def nearest_neighbor(self, element: BoundingBox, k=1) -> \
             List[BoundingBox]:
         pass
-
-    @property
-    def height(self):
-        return self.root.height
 
 
 if __name__ == "__main__":
