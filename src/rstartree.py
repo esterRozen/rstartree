@@ -359,45 +359,42 @@ class RSNode:
         top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
         bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
 
-        sc_i: List[List[List[BoundingBox]]] = []
+        sc_i_list: List[List[List[BoundingBox]]] = []
         for idx in range(self.__lower, self.__upper - self.__lower + 1):
-            sc = [top_bbs[:idx], top_bbs[idx:]]
-            sc_bounds = [self.__create_sc_bounds(top_bbs, idx)]
+            sc_i_list += [[self.__create_sc_bounds(top_bbs, idx),
+                           self.__create_sc_bounds(bot_bbs, idx)]]
 
-            sc_bounds += [self.__create_sc_bounds(bot_bbs, idx)]
-
-            sc_i += sc_bounds
-
-        wf = self.__compute_wf(dim, sc_i)
         # dim 0: different split indexes
         # dim 1: top vs bottom
         # dim 2: sc_1, sc_2
+
+        wf = self.__compute_wf(dim)
+
+        # TODO test this
+
         # outer apply: over different split indexes
         # inner apply: over different bounding box positions
         # margin of bounding box pairs sc_1 and sc_2
-        margin_sc = np.apply_along_axis(lambda block:
-                                        np.sum(np.apply_along_axis(
-                                                    lambda bbox:
-                                                    bbox.margin,
-                                                    axis=0, arr=block),
-                                               axis=0),
-                                        axis=0, arr=sc_i)
+        margin_sc: List[List[float]] = []
+        for side_list in sc_i_list:
+            margin_sc += [[]]
+            for split in side_list:
+                margin_sc[-1] += [split[0].margin + split[1].margin]
 
         # overlap of bounding box pairs sc_1 and sc_2
-        overlap_sc = np.apply_along_axis(lambda block:
-                                         np.apply_along_axis(
-                                             lambda pair:
-                                             BoundingBox.overlap_sc(pair[0], pair[1]),
-                                             axis=0, arr=block),
-                                         axis=0, arr=sc_i)
+        overlap_sc: List[List[BoundingBox]] = []
+        for side_list in sc_i_list:
+            overlap_sc += [[]]
+            for split in side_list:
+                overlap_sc[-1] += BoundingBox.overlap_sc(split[0], split[1])
 
         # margin of overlap of box pairs
-        margin_overlap_sc = np.apply_along_axis(lambda vector:
-                                                np.apply_along_axis(
-                                                    lambda bbox:
-                                                    bbox.margin,
-                                                    axis=0, arr=vector),
-                                                axis=0, arr=overlap_sc)
+        margin_overlap_sc: List[List[float]] = []
+        for side_list in overlap_sc:
+            margin_overlap_sc += [[
+                side_list[0].margin,
+                side_list[1].margin
+            ]]
 
         wg: NDArray = np.multiply(margin_sc - max_perim, wf)
         wg_alt: NDArray = np.divide(margin_overlap_sc, wf)
@@ -405,25 +402,17 @@ class RSNode:
         indexes = np.abs(margin_overlap_sc) < eps
         wg = np.put(wg, indexes, wg_alt[indexes])
         # should give the best split candidate
-        return sc_i[np.unravel_index(np.argmin(wg), wg.shape)]
+        split, direction = np.unravel_index(np.argmin(wg), wg.shape)
+        return sc_i_list[split][direction]
 
-    def __compute_wf(self, dim: int, sc: List[List[List[BoundingBox]]]):
-        # dim 0: split candidate index
-        # dim 1: top vs bottom
-        # dim 2: sc_1, sc_2
-        asym = np.apply_along_axis(
-                lambda split:
-                np.apply_along_axis(
-                        lambda side:
-                        np.apply_along_axis(
-                                lambda box:
-                                self.bounds.asymmetry(box, dim),
-                                axis=0, arr=side),
-                        axis=0, arr=split),
-                axis=0, arr=sc)
+    def __compute_wf(self, dim: int) -> List[float]:
+        # how much the bbox has become lopsided along
+        # dimension dim, relative to where it started
+        asym = self.bounds.asymmetry(self.o_box, dim)
 
         mean = (1 - self.__lower / (self.__upper + 1)) * asym
         sigma = self.__shape * (1 + np.abs(mean))
+
         # y offset
         y1 = math.exp(-1 / (self.__shape ** 2))
         # y scaling
