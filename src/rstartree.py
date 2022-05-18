@@ -18,6 +18,7 @@ from numpy.typing import NDArray
 
 from .boundingbox import BoundingBox, Point
 
+
 eps = 0.001
 
 
@@ -42,7 +43,98 @@ class RSNode:
         return self.bounds.__repr__() + ", leaf: " \
                + str(self.is_leaf) + ", children: " + str(len(self.children))
 
-    def _choose_subtree(self, element: Union[BoundingBox, Point]) -> 'RSNode':
+    @property
+    def height(self):
+        if self.is_leaf:
+            return 1
+        else:
+            return 1 + self.children[0].height
+
+    @property
+    def depth(self):
+        if self.is_root:
+            return 0
+        else:
+            return 1 + self.parent.depth
+
+    @property
+    def is_leaf(self):
+        if not self.children:
+            return True
+        if isinstance(self.children[0], BoundingBox):
+            return True
+        return False
+
+    @property
+    def is_overfilled(self):
+        return self.children.__len__() >= self.__tree.upper
+
+    @property
+    def is_underfilled(self):
+        return self.children.__len__() < self.__tree.lower
+
+    @property
+    def is_root(self):
+        return self.parent is None
+
+    # main interaction methods
+
+    def query(self, element: BoundingBox) -> bool:
+        # TODO query
+        pass
+
+    def insert(self, element: BoundingBox) -> None:
+        """
+        inserts using heuristic function to choose path
+        to insert down
+        :param element: BBox or Point to be inserted in nearly
+        optimal location
+        """
+
+        # if node is leaf
+        # add point to node list and update bounding box
+        # check if split needed
+        if self.is_leaf:
+            if self.is_overfilled:
+                self._split()
+                self.parent.insert(element)
+                return
+            else:
+                # should only happen a few times!
+                # (may happen if elements are removed from a node)
+                if self.is_underfilled:
+                    self.o_box = element.min_bb_with(self.bounds)
+
+                self.children += [element]
+
+                # bounds of element *with* own bounds deals
+                # with issue where self.bounds is None
+                self.bounds = element.min_bb_with(self.bounds)
+                return
+
+        else:
+            # else:
+            # insert to child node
+            if self.is_overfilled:
+                self._split()
+                self.parent.insert(element)
+                return
+            else:
+                child = self._choose_subtree(element)
+                child.insert(element)
+
+                self.bounds = element.min_bb_with(self.bounds)
+                return
+
+    def remove(self, element: BoundingBox) -> bool:
+        # TODO remove
+        pass
+
+    ##########################
+    # internals
+    # choose subtree
+
+    def _choose_subtree(self, element: BoundingBox) -> 'RSNode':
         # compute covered, (checking if any entries fully cover the object)
         # if there is anything that does, choose the one with minimum volume or perimeter
         covering_nodes: List[RSNode] = []
