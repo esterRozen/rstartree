@@ -321,6 +321,14 @@ class RSNode:
         # new_nodes[1].children = self.children[2:]
         return new_nodes
 
+    def __sort_nodes_over(self, dim: int) -> Tuple[List[BoundingBox], List[BoundingBox]]:
+        top_nodes = sorted(self.children, key=lambda node: node.tops[dim])
+        bot_nodes = sorted(self.children, key=lambda node: node.bottoms[dim])
+
+        top_bbs = list(map(lambda rnode: rnode.bounds, top_nodes))
+        bot_bbs = list(map(lambda rnode: rnode.bounds, bot_nodes))
+        return top_bbs, bot_bbs
+
     def __determine_dim(self) -> int:
         """
         provides the indexes of dimension with
@@ -329,8 +337,7 @@ class RSNode:
         """
         best = None
         for dim in range(self.bounds.tops.shape[0]):
-            top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
-            bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
+            top_bbs, bot_bbs = self.__sort_nodes_over(dim)
 
             sc_i: List[List[BoundingBox]] = []
             for idx in range(self.__lower, self.__upper - self.__lower + 1):
@@ -356,8 +363,7 @@ class RSNode:
         # always assume you are in the node that is being split!
         max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
 
-        top_bbs = sorted(self.children, key=lambda node: node.tops[dim])
-        bot_bbs = sorted(self.children, key=lambda node: node.bottoms[dim])
+        top_bbs, bot_bbs = self.__sort_nodes_over(dim)
 
         sc_i_list: List[List[List[BoundingBox]]] = []
         for idx in range(self.__lower, self.__upper - self.__lower + 1):
@@ -438,44 +444,10 @@ class RSNode:
     def __shape(self):
         return self.__tree.shape
 
-    @property
-    def height(self):
-        if self.is_leaf:
-            return 1
-        else:
-            return 1 + self.children[0].height
-
-    @property
-    def depth(self):
-        if self.is_root:
-            return 0
-        else:
-            return 1 + self.parent.depth
-
-    @property
-    def is_leaf(self):
-        if not self.children:
-            return True
-        if isinstance(self.children[0], BoundingBox):
-            return True
-        return False
-
-    @property
-    def is_overfilled(self):
-        return self.children.__len__() >= self.__tree.upper
-
-    @property
-    def is_underfilled(self):
-        return self.children.__len__() < self.__tree.lower
-
-    @property
-    def is_root(self):
-        return self.parent is None
-
     @staticmethod
-    def __create_sc_bounds(splits: List[List[BoundingBox]], idx: int) -> \
+    def __create_sc_bounds(bbs_sorted: List[BoundingBox], idx: int) -> \
             List[BoundingBox]:
-        sc = [splits[:idx], splits[idx:]]
+        sc = [bbs_sorted[:idx], bbs_sorted[idx:]]
         return [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
 
 
