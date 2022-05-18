@@ -492,9 +492,10 @@ class RSNode:
 
 class RStarTree:
     def __init__(self, lower=4, upper=50, shape=0.5):
-        self.lower = lower
-        self.upper = upper
-        self.shape = shape
+        # maintain invariants by preventing these from being changed
+        self.__lower = lower
+        self.__upper = upper
+        self.__shape = shape
         # dont forget experimental parameters
         self.root = RSNode(None, self)
         # root has at least two children unless it is leaf
@@ -505,8 +506,14 @@ class RStarTree:
     def __repr__(self):
         return self.root.__repr__()
 
-    def insert(self, element: Union[BoundingBox, Point]):
-        self.root.insert(element)
+    # getters
+    @property
+    def lower(self):
+        return self.__lower
+
+    @property
+    def upper(self):
+        return self.__upper
 
     # check if present
     def query(self, element: Union[BoundingBox, Point]) -> bool:
