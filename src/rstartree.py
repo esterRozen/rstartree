@@ -336,7 +336,8 @@ class RSNode:
 
         return new_nodes
 
-    def __sort_nodes_over(self, dim: int) -> Tuple[List[BoundingBox], List[BoundingBox]]:
+    def __sort_nodes_over(self, dim: int) -> \
+            Tuple[List[BoundingBox], List[BoundingBox]]:
         top_nodes = sorted(self.children, key=lambda node: node.tops[dim])
         bot_nodes = sorted(self.children, key=lambda node: node.bottoms[dim])
 
