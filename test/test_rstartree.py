@@ -49,6 +49,10 @@ class TestRSNode(TestCase):
         tree.insert(Point(np.array([4, 3])))
 
         tree.insert(Point(np.array([2, 3])))
+        tree.insert(Point(np.array([5, 4])))
+        tree.insert(Point(np.array([8, 2])))
+        tree.insert(Point(np.array([5, 6])))
+        tree.insert(Point(np.array([4, 8])))
         self.fail()
 
     def test_choose_split(self):
