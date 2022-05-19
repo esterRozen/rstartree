@@ -38,9 +38,8 @@ class RSNode:
         self.bounds: Union[BoundingBox, None] = None
         self.children: List[Union['RSNode', BoundingBox]] = []
 
-        # first instantiation (for inner nodes)
+        # set at first instantiation (for inner nodes)
         # (or first time a leaf node has over m objects)
-        # TODO deal with root node not having o_box
         self.o_box: Union[BoundingBox, None] = None
         # TODO remove this. it's terrible
         self._success = False
