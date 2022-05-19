@@ -55,19 +55,7 @@ class TestRSNode(TestCase):
         tree.insert(Point(np.array([4, 8])))
         self.fail()
 
-    def test_choose_split(self):
-        self.fail()
-
     def test_split(self):
-        self.fail()
-
-    def test__determine_dim(self):
-        self.fail()
-
-    def test__minimize_on(self):
-        self.fail()
-
-    def test__compute_wf(self):
         self.fail()
 
 
