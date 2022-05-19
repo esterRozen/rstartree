@@ -174,7 +174,6 @@ class RSNode:
 
         # assign to first in list if none of the other entries would suffer from assignment
         # (by increased overlap with first node)
-        # TODO find way to maintain sorting of this when adding nodes
         node = E[0]
         bb = node.bounds
         bb_with_obj = bb.min_bb_with(element)
