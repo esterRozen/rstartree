@@ -384,7 +384,7 @@ class RSNode:
         """
 
         # always assume you are in the node that is being split!
-        max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
+        max_perim = self.bounds.margin - np.min(self.bounds.bottoms)
 
         if self.is_leaf:
             top_bbs, bot_bbs = self.__sort_bounds_over(dim)
