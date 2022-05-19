@@ -331,8 +331,8 @@ class RSNode:
             else:
                 node_sort = sorted(self.children, key=lambda node: node.tops[dim])
 
-        new_nodes[0].children = node_sort[:best[0]]
-        new_nodes[1].children = node_sort[best[0]:]
+        new_nodes[0].children = node_sort[:best[0] + self.__lower]
+        new_nodes[1].children = node_sort[best[0] + self.__lower:]
 
         return new_nodes
 
