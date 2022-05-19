@@ -418,24 +418,39 @@ class RSNode:
         for side_list in sc_i_list:
             overlap_sc += [[]]
             for split in side_list:
-                overlap_sc[-1] += BoundingBox.overlap_sc(split[0], split[1])
+                overlap_sc[-1] += [BoundingBox.overlap_sc(split[0], split[1])]
 
         # margin of overlap of box pairs
         margin_overlap_sc: List[List[float]] = []
         for side_list in overlap_sc:
+            margin_ovlp_sc_1 = 0
+            margin_ovlp_sc_2 = 0
+            if side_list[0] is not None:
+                margin_ovlp_sc_1 = side_list[0].margin
+            if side_list[1] is not None:
+                margin_ovlp_sc_2 = side_list[1].margin
             margin_overlap_sc += [[
-                side_list[0].margin,
-                side_list[1].margin
+                margin_ovlp_sc_1,
+                margin_ovlp_sc_2
             ]]
 
-        wg: NDArray = np.multiply(margin_sc - max_perim, wf)
-        wg_alt: NDArray = np.divide(margin_overlap_sc, wf)
+        margin_sc: NDArray = np.array(margin_sc)
+        wg: NDArray = np.zeros(margin_sc.shape)
+        wg[:, 0] = np.multiply(margin_sc[:, 0] - max_perim, wf)
+        wg[:, 1] = np.multiply(margin_sc[:, 1] - max_perim, wf)
 
-        indexes = np.abs(margin_overlap_sc) < eps
-        wg = np.put(wg, indexes, wg_alt[indexes])
+        margin_overlap_sc: NDArray = np.array(margin_overlap_sc)
+        wg_alt: NDArray = np.zeros(margin_overlap_sc.shape)
+        wg_alt[:, 0] = np.divide(margin_overlap_sc[:, 0], wf)
+        wg_alt[:, 1] = np.divide(margin_overlap_sc[:, 1], wf)
+
+        indexes = np.abs(margin_overlap_sc) > eps
+        np.putmask(wg, indexes, wg_alt[indexes])
+
         # should give the best split candidate
         split, direction = np.unravel_index(np.argmin(wg), wg.shape)
-        return sc_i_list[split][direction]
+
+        return split, direction, wg[split, direction]
 
     def __compute_wf(self, dim: int) -> List[float]:
         # how much the bbox has become lopsided along
