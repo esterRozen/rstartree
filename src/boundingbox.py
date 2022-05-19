@@ -77,8 +77,8 @@ class BoundingBox:
     def center_along(self, dim: int):
         return (self.tops[dim] + self.bottoms[dim]) / 2
 
-    def width(self, dim: int):
-        return self.tops[dim] - self.bottoms[dim]
+    def width(self, dim: int) -> float:
+        return abs(self.tops[dim] - self.bottoms[dim])
 
     def volume_diff(self, other: 'BoundingBox') -> float:
         return other.volume - self.volume
