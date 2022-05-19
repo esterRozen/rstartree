@@ -457,7 +457,7 @@ class RSNode:
         # dimension dim, relative to where it started
         asym = self.bounds.asymmetry(self.o_box, dim)
 
-        mean = (1 - self.__lower / (self.__upper + 1)) * asym
+        mean = (1 - 2 * self.__lower / (self.__upper + 1)) * asym
         sigma = self.__shape * (1 + np.abs(mean))
 
         # y offset
