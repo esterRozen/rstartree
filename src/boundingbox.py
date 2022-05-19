@@ -68,13 +68,13 @@ class BoundingBox:
     def is_same(self, other: 'BoundingBox') -> bool:
         return np.all(self.tops == other.tops) and np.all(self.bottoms == other.bottoms)
 
-    def asymmetry(self, other: 'BoundingBox', dim: int):
+    def asymmetry(self, other: 'BoundingBox', dim: int) -> float:
         # assumes this is the new one, other is original
         other_center = other.center_along(dim)
         self_center = self.center_along(dim)
         return 2 * (self_center - other_center) / max(.5, self.width(dim))
 
-    def center_along(self, dim: int):
+    def center_along(self, dim: int) -> NDArray[float]:
         return (self.tops[dim] + self.bottoms[dim]) / 2
 
     def width(self, dim: int) -> float:
