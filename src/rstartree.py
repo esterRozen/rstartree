@@ -23,6 +23,12 @@ eps = 0.001
 
 
 # noinspection SpellCheckingInspection
+def create_sc_bounds(bbs_sorted: List[BoundingBox], idx: int) -> \
+        List[BoundingBox]:
+    sc = [bbs_sorted[:idx], bbs_sorted[idx:]]
+    return [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
+
+
 class RSNode:
     def __init__(self, parent, tree: 'RStarTree'):
         # used to access global parameters
