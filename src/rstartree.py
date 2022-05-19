@@ -393,8 +393,8 @@ class RSNode:
 
         sc_i_list: List[List[List[BoundingBox]]] = []
         for idx in range(self.__lower, self.__upper - self.__lower + 1):
-            sc_i_list += [[self.__create_sc_bounds(top_bbs, idx),
-                           self.__create_sc_bounds(bot_bbs, idx)]]
+            sc_i_list += [[create_sc_bounds(top_bbs, idx),
+                           create_sc_bounds(bot_bbs, idx)]]
 
         # dim 0: different split indexes
         # dim 1: top vs bottom
