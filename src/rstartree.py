@@ -402,8 +402,6 @@ class RSNode:
 
         wf = self.__compute_wf(dim)
 
-        # TODO test this
-
         # outer apply: over different split indexes
         # inner apply: over different bounding box positions
         # margin of bounding box pairs sc_1 and sc_2
