@@ -87,7 +87,7 @@ class RSNode:
     # main interaction methods
 
     def query(self, element: BoundingBox) -> bool:
-        # TODO query
+        # TODO query (high priority)
         pass
 
     def insert(self, element: BoundingBox) -> None:
@@ -134,7 +134,10 @@ class RSNode:
                 return
 
     def remove(self, element: BoundingBox) -> bool:
-        # TODO remove
+        # TODO remove (low priority)
+        #  should have some means of handling recombining nodes
+        #  should recursively go up tree if recombined nodes cause
+        #  parent node to have too few nodes.
         pass
 
     ##########################
@@ -389,6 +392,8 @@ class RSNode:
             margin_sc += [[]]
             for split in side_list:
                 margin_sc[-1] += [split[0].margin + split[1].margin]
+
+        # TODO if there are ties for best margin, choose by best area
 
         # overlap of bounding box pairs sc_1 and sc_2
         overlap_sc: List[List[BoundingBox]] = []
