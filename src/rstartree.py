@@ -360,14 +360,14 @@ class RSNode:
         """
         best = None
         for dim in range(self.bounds.tops.shape[0]):
-            top_bbs, bot_bbs = self.__sort_nodes_over(dim)
+            top_bbs, bot_bbs = self.__sort_bounds_over(dim)
 
             sc_i: List[List[BoundingBox]] = []
             for idx in range(self.__lower, self.__upper - self.__lower + 1):
-                sc = self.__create_sc_bounds(top_bbs, idx)
+                sc = create_sc_bounds(top_bbs, idx)
                 sc_i += [sc[0].margin + sc[1].margin]
 
-                sc = self.__create_sc_bounds(bot_bbs, idx)
+                sc = create_sc_bounds(bot_bbs, idx)
                 sc_i += [sc[0].margin + sc[1].margin]
 
             minimum = np.argmin(sc_i)
