@@ -104,7 +104,7 @@ class RSNode:
         if self.is_leaf:
             if self.is_overfilled:
                 self._split()
-                self.parent.insert(element)
+                self.__tree.root.insert(element)
                 return
             else:
                 # should only happen a few times!
