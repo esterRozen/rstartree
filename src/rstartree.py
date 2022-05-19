@@ -464,9 +464,9 @@ class RSNode:
         y1 = math.exp(-1 / (self.__shape ** 2))
         # y scaling
         ys = 1 / (1 - y1)
-        num = 2 * np.arange(self.__lower,
-                            self.__upper - self.__lower + 1)
-        xi = num / (self.__upper + 1) - 1
+        num = np.arange(self.__lower,
+                        self.__upper - self.__lower + 1)
+        xi = 2 * num / self.__upper - 1
 
         z_score = (xi - mean) / sigma
         wf = ys * (np.exp(-1 * (z_score ** 2)) - y1)
