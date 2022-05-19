@@ -265,10 +265,14 @@ class RSNode:
         """
         new_nodes = self._split_in_two()
 
-        new_nodes[0].bounds = BoundingBox.create(
-                [child.bounds for child in new_nodes[0].children])
-        new_nodes[1].bounds = BoundingBox.create(
-                [child.bounds for child in new_nodes[1].children])
+        if new_nodes[0].is_leaf:
+            new_nodes[0].bounds = BoundingBox.create(new_nodes[0].children)
+            new_nodes[1].bounds = BoundingBox.create(new_nodes[1].children)
+        else:
+            new_nodes[0].bounds = BoundingBox.create(
+                    [child.bounds for child in new_nodes[0].children])
+            new_nodes[1].bounds = BoundingBox.create(
+                    [child.bounds for child in new_nodes[1].children])
 
         new_nodes[0].o_box = new_nodes[0].bounds
         new_nodes[1].o_box = new_nodes[1].bounds
@@ -317,9 +321,15 @@ class RSNode:
 
         # check direction
         if best[1]:
-            node_sort = sorted(self.children, key=lambda node: node.bottoms[dim])
+            if self.is_leaf:
+                node_sort = sorted(self.children, key=lambda bbox: bbox.bottoms[dim])
+            else:
+                node_sort = sorted(self.children, key=lambda node: node.bounds.bottoms[dim])
         else:
-            node_sort = sorted(self.children, key=lambda node: node.tops[dim])
+            if self.is_leaf:
+                node_sort = sorted(self.children, key=lambda bbox: bbox.tops[dim])
+            else:
+                node_sort = sorted(self.children, key=lambda node: node.tops[dim])
 
         new_nodes[0].children = node_sort[:best[0]]
         new_nodes[1].children = node_sort[best[0]:]
@@ -332,6 +342,13 @@ class RSNode:
 
         top_bbs = list(map(lambda rnode: rnode.bounds, top_nodes))
         bot_bbs = list(map(lambda rnode: rnode.bounds, bot_nodes))
+        return top_bbs, bot_bbs
+
+    def __sort_bounds_over(self, dim: int) -> \
+            Tuple[List[BoundingBox], List[BoundingBox]]:
+        top_bbs = sorted(self.children, key=lambda bbox: bbox.tops[dim])
+        bot_bbs = sorted(self.children, key=lambda bbox: bbox.bottoms[dim])
+
         return top_bbs, bot_bbs
 
     def __determine_dim(self) -> int:
@@ -368,7 +385,10 @@ class RSNode:
         # always assume you are in the node that is being split!
         max_perim = self.bounds.margin * 2 - np.min(self.bounds.bottoms)
 
-        top_bbs, bot_bbs = self.__sort_nodes_over(dim)
+        if self.is_leaf:
+            top_bbs, bot_bbs = self.__sort_bounds_over(dim)
+        else:
+            top_bbs, bot_bbs = self.__sort_nodes_over(dim)
 
         sc_i_list: List[List[List[BoundingBox]]] = []
         for idx in range(self.__lower, self.__upper - self.__lower + 1):
