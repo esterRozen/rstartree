@@ -40,8 +40,10 @@ class RSNode:
         self._success = False
 
     def __repr__(self):
-        return self.bounds.__repr__() + ", leaf: " \
-               + str(self.is_leaf) + ", children: " + str(len(self.children))
+        return "Node(" + self.bounds.__repr__() \
+               + ", leaf: " + str(self.is_leaf) \
+               + ", children: " + str(len(self.children)) \
+               + ")"
 
     @property
     def height(self):
@@ -462,7 +464,7 @@ class RStarTree:
         # (the tree can only grow in depth from the root, which makes it easier)
 
     def __repr__(self):
-        return self.root.__repr__()
+        return "Tree: Root(" + self.root.__repr__() + ")"
 
     # getters
     @property

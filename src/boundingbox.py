@@ -19,8 +19,8 @@ class BoundingBox:
     obj = None
 
     def __repr__(self):
-        return "tops: " + self.tops.__repr__()[6:-1] \
-               + ", bottoms: " + self.bottoms.__repr__()[6:-1]
+        return "BBox(top(" + self.tops.__repr__()[6:-1] \
+               + "), bot(" + self.bottoms.__repr__()[6:-1] + "))"
 
     def __copy__(self) -> 'BoundingBox':
         return BoundingBox(self.tops, self.bottoms)
@@ -132,7 +132,7 @@ class Point(BoundingBox):
         self.point = point
 
     def __repr__(self):
-        return "Point: " + self.point.__repr__()[6:-1]
+        return "Point(" + self.point.__repr__()[6:-1] + ")"
 
     def __copy__(self) -> 'Point':
         return Point(self.tops)
