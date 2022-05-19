@@ -72,7 +72,7 @@ class BoundingBox:
         # assumes this is the new one, other is original
         other_center = other.center_along(dim)
         self_center = self.center_along(dim)
-        return 2 * (self_center - other_center) / self.width(dim)
+        return 2 * (self_center - other_center) / max(.5, self.width(dim))
 
     def center_along(self, dim: int):
         return (self.tops[dim] + self.bottoms[dim]) / 2
