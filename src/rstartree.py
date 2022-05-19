@@ -485,12 +485,6 @@ class RSNode:
     def __shape(self):
         return self.__tree.shape
 
-    @staticmethod
-    def __create_sc_bounds(bbs_sorted: List[BoundingBox], idx: int) -> \
-            List[BoundingBox]:
-        sc = [bbs_sorted[:idx], bbs_sorted[idx:]]
-        return [BoundingBox.create(sc[0]), BoundingBox.create(sc[1])]
-
 
 class RStarTree:
     def __init__(self, lower=4, upper=50, shape=0.5):
