@@ -32,7 +32,7 @@ class BoundingBox:
         return BoundingBox(bb_tops, bb_bottoms)
 
     @staticmethod
-    def margin_of(box: Union['BoundingBox', None]) -> Union[float, None]:
+    def margin_of(box: Union['BoundingBox', None]) -> float:
         if box is None:
             return 0
         return 2 ** (len(box.tops) - 1) * np.sum(np.subtract(box.tops, box.bottoms))
@@ -47,7 +47,7 @@ class BoundingBox:
         return BoundingBox(bb_tops, bb_bottoms)
 
     @staticmethod
-    def volume_of(box: Union['BoundingBox', None]) -> Union[float, None]:
+    def volume_of(box: Union['BoundingBox', None]) -> float:
         if box is None:
             return 0
         return box.volume
