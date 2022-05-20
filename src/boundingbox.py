@@ -11,6 +11,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 
+eps = 0.0001
+
+
 @dataclass
 class BoundingBox:
     # points are abstracted as same top and bottom bounds
@@ -24,6 +27,12 @@ class BoundingBox:
 
     def __copy__(self) -> 'BoundingBox':
         return BoundingBox(self.tops, self.bottoms)
+
+    def __eq__(self, other: 'BoundingBox'):
+        tops = np.abs(np.subtract(self.tops, other.tops))
+        bottoms = np.abs(np.subtract(self.bottoms, other.bottoms))
+
+        return np.all(tops < eps) and np.all(bottoms < eps)
 
     @staticmethod
     def create(bounds: List['BoundingBox']) -> 'BoundingBox':
