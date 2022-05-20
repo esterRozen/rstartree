@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 from unittest import TestCase
 
-from src.rstartree import RStarTree
+from src.rstartree import RStarTree, RSNode, BoundingBox
 from src.boundingbox import Point
 
 
@@ -13,6 +13,28 @@ class TestRSNode(TestCase):
 
     def test_is_leaf(self):
         self.fail()
+
+    def _traverse_relation_check(self, root: RSNode):
+        for child in root.children:
+            if not root.is_leaf:
+                if child.parent != root:
+                    self.fail(f"parent {root} does not match child's "
+                              f"({child}) parent {child.parent}")
+                self._traverse_relation_check(child)
+
+    def _bounds_verification(self, root: RSNode) -> NDArray[float]:
+        if root.is_leaf:
+            bounds = BoundingBox.create(root.children)
+        else:
+            list_bounds = list(map(lambda child: child.bounds, root))
+            bounds = BoundingBox.create(list_bounds)
+        self.assertTrue(bounds == root.bounds)
+
+    def _traverse_bound_check(self, root: RSNode):
+        self._bounds_verification(root)
+        if not root.is_leaf:
+            for child in root.children:
+                self._traverse_bound_check(child)
 
     def test_choose_subtree(self):
         def test__check_coverage():
@@ -44,15 +66,34 @@ class TestRSNode(TestCase):
     def test_insert(self):
         tree = self.new()
         tree.insert(Point(np.array([1, 3])))
+        self._traversal(tree.root)
         tree.insert(Point(np.array([2, 2])))
+        self._traversal(tree.root)
         tree.insert(Point(np.array([5, 2])))
+        self._traversal(tree.root)
         tree.insert(Point(np.array([4, 3])))
+        self._traversal(tree.root)
 
         tree.insert(Point(np.array([2, 3])))
+        self._traversal(tree.root)
         tree.insert(Point(np.array([5, 4])))
+        self._traversal(tree.root)
         tree.insert(Point(np.array([8, 2])))
+        self._traversal(tree.root)
         tree.insert(Point(np.array([5, 6])))
+        self._traversal(tree.root)
         tree.insert(Point(np.array([4, 8])))
+        self._traversal(tree.root)
+
+        tree.insert(Point(np.array([5, 5])))
+        self._traversal(tree.root)
+        tree.insert(Point(np.array([6, 1])))
+        self._traversal(tree.root)
+        tree.insert(Point(np.array([8, 5])))
+        self._traversal(tree.root)
+        tree.insert(Point(np.array([7, 4])))
+        self._traversal(tree.root)
+
         self.fail()
 
     def test_split(self):
