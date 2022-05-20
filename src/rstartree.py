@@ -339,7 +339,7 @@ class RSNode:
             if self.is_leaf:
                 node_sort = sorted(self.children, key=lambda bbox: bbox.tops[dim])
             else:
-                node_sort = sorted(self.children, key=lambda node: node.tops[dim])
+                node_sort = sorted(self.children, key=lambda node: node.bounds.tops[dim])
 
         new_nodes[0].children = node_sort[:best[0] + self.__lower]
         new_nodes[1].children = node_sort[best[0] + self.__lower:]
@@ -348,8 +348,8 @@ class RSNode:
 
     def __sort_nodes_over(self, dim: int) -> \
             Tuple[List[BoundingBox], List[BoundingBox]]:
-        top_nodes = sorted(self.children, key=lambda node: node.tops[dim])
-        bot_nodes = sorted(self.children, key=lambda node: node.bottoms[dim])
+        top_nodes = sorted(self.children, key=lambda node: node.bounds.tops[dim])
+        bot_nodes = sorted(self.children, key=lambda node: node.bounds.bottoms[dim])
 
         top_bbs = list(map(lambda rnode: rnode.bounds, top_nodes))
         bot_bbs = list(map(lambda rnode: rnode.bounds, bot_nodes))
