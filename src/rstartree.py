@@ -270,7 +270,7 @@ class RSNode:
 
     def _split(self) -> None:
         """
-        splits the current node. if root, will unseat current tree's root
+        splits the current node upward. if root, will unseat current tree's root
         :return: None
         """
         new_nodes = self._split_in_two()
