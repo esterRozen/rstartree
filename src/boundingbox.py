@@ -37,7 +37,7 @@ class BoundingBox:
     @staticmethod
     def create(bounds: List['BoundingBox']) -> 'BoundingBox':
         bb_tops = np.max(np.stack([bound.tops for bound in bounds]), axis=0)
-        bb_bottoms = np.min(np.stack([bound.tops for bound in bounds]), axis=0)
+        bb_bottoms = np.min(np.stack([bound.bottoms for bound in bounds]), axis=0)
         return BoundingBox(bb_tops, bb_bottoms)
 
     @staticmethod
