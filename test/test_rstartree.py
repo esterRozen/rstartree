@@ -22,11 +22,11 @@ class TestRSNode(TestCase):
                               f"({child}) parent {child.parent}")
                 self._traverse_relation_check(child)
 
-    def _bounds_verification(self, root: RSNode) -> NDArray[float]:
+    def _bounds_verification(self, root: RSNode):
         if root.is_leaf:
             bounds = BoundingBox.create(root.children)
         else:
-            list_bounds = list(map(lambda child: child.bounds, root))
+            list_bounds = list(map(lambda child: child.bounds, root.children))
             bounds = BoundingBox.create(list_bounds)
         self.assertTrue(bounds == root.bounds)
 
@@ -35,6 +35,10 @@ class TestRSNode(TestCase):
         if not root.is_leaf:
             for child in root.children:
                 self._traverse_bound_check(child)
+
+    def _traverse_tests(self, root: RSNode):
+        self._traverse_bound_check(root)
+        self._traverse_relation_check(root)
 
     def test_choose_subtree(self):
         def test__check_coverage():
