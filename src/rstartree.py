@@ -296,6 +296,14 @@ class RSNode:
             new_nodes[0].parent = new_root
             new_nodes[1].parent = new_root
 
+            if not new_nodes[0].is_leaf:
+                for child in new_nodes[0].children:
+                    child.parent = new_nodes[0]
+
+            if not new_nodes[1].is_leaf:
+                for child in new_nodes[1].children:
+                    child.parent = new_nodes[1]
+
             new_root.children = new_nodes
 
             new_root.__tree.root = new_root
