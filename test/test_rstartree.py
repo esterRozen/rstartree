@@ -105,6 +105,10 @@ class TestRSNode(TestCase):
         self._traverse_tests(tree.root)
 
     def test_split(self):
+        """
+        tests the invariants of the split
+        # splits properly chosen by heuristic
+        """
         self.fail()
 
 
