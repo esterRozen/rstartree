@@ -68,37 +68,41 @@ class TestRSNode(TestCase):
         self.fail()
 
     def test_insert(self):
+        """
+        tests invariants of insertion.
+        # bounds must remain consistent
+        # relationships must be proper
+        # must never be overfilled
+        """
         tree = self.new()
         tree.insert(Point(np.array([1, 3])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([2, 2])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([5, 2])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([4, 3])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
 
         tree.insert(Point(np.array([2, 3])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([5, 4])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([8, 2])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([5, 6])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([4, 8])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
 
         tree.insert(Point(np.array([5, 5])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([6, 1])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([8, 5])))
-        self._traversal(tree.root)
+        self._traverse_tests(tree.root)
         tree.insert(Point(np.array([7, 4])))
-        self._traversal(tree.root)
-
-        self.fail()
+        self._traverse_tests(tree.root)
 
     def test_split(self):
         self.fail()
