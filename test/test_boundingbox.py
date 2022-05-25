@@ -38,9 +38,6 @@ class TestBoundingBox(TestCase):
     def test_volume_of(self):
         self.fail()
 
-    def test_is_same(self):
-        self.fail()
-
     def test_asymmetry(self):
         self.fail()
 
