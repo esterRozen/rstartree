@@ -86,9 +86,22 @@ class RSNode:
 
     # main interaction methods
 
-    def query(self, element: BoundingBox) -> bool:
-        # TODO query (high priority)
-        pass
+    def query(self, element: BoundingBox) -> \
+            List[Union[BoundingBox, Point]]:
+        if self.is_leaf:
+            # report all object intersecting with element
+            out: List[Union[BoundingBox, Point]] = []
+            for child in self.children:
+                # if 2 bounding boxes overlap
+                if element.overlap(child) is not None:
+                    out += [child]
+            return out
+        else:
+            out: List[Union[BoundingBox, Point]] = []
+            for child in self.children:
+                if element.overlap(self.bounds) is not None:
+                    out += child.query(element)
+            return out
 
     def insert(self, element: BoundingBox) -> None:
         """
@@ -538,8 +551,11 @@ class RStarTree:
     def height(self):
         return self.root.height
 
-    def query(self, element: BoundingBox) -> bool:
-        # check if present
+    def query(self, element: BoundingBox) -> \
+            List[Union[BoundingBox, Point]]:
+        """
+        returns all elements intersecting with given bounding box
+        """
         return self.root.query(element)
 
     # setters
