@@ -436,7 +436,7 @@ class RSNode:
         for side_list in sc_i_list:
             overlap_sc += [[]]
             for split in side_list:
-                overlap_sc[-1] += [BoundingBox.overlap_sc(split[0], split[1])]
+                overlap_sc[-1] += [BoundingBox.overlap_of(split[0], split[1])]
 
         # margin of overlap of box pairs
         margin_overlap_sc: List[List[float]] = []

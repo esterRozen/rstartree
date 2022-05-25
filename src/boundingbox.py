@@ -47,11 +47,11 @@ class BoundingBox:
         return 2 ** (len(box.tops) - 1) * np.sum(np.subtract(box.tops, box.bottoms))
 
     @staticmethod
-    def overlap_sc(box_1: 'BoundingBox', box_2: 'BoundingBox') -> \
+    def overlap_of(box_1: 'BoundingBox', box_2: 'BoundingBox') -> \
             Union['BoundingBox', None]:
         bb_tops = np.minimum(box_1.tops, box_2.tops)
         bb_bottoms = np.maximum(box_1.bottoms, box_2.bottoms)
-        if np.any(bb_tops < bb_bottoms):
+        if np.any(bb_tops <= bb_bottoms):
             return None
         return BoundingBox(bb_tops, bb_bottoms)
 
