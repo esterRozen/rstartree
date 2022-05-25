@@ -51,7 +51,7 @@ class BoundingBox:
             Union['BoundingBox', None]:
         bb_tops = np.minimum(box_1.tops, box_2.tops)
         bb_bottoms = np.maximum(box_1.bottoms, box_2.bottoms)
-        if np.any(bb_tops <= bb_bottoms):
+        if np.any(bb_tops < bb_bottoms):
             return None
         return BoundingBox(bb_tops, bb_bottoms)
 

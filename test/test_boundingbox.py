@@ -28,7 +28,8 @@ class TestBoundingBox(TestCase):
 
         bb2 = BoundingBox(np.array([5, 5]), np.array([0, 0]))
         overlap = BoundingBox.overlap_of(bb1, bb2)
-        self.assertTrue(overlap is None, "should return none when only corners touch due to zero volume overlap")
+        cmp = BoundingBox(np.array([5, 5]), np.array([5, 5]))
+        self.assertTrue(overlap == cmp, "zero volume overlap with connected boxes")
 
         bb2 = BoundingBox(np.array([5, 4.5]), np.array([0, 0]))
         overlap = BoundingBox.overlap_of(bb1, bb2)
