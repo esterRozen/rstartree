@@ -14,31 +14,30 @@ class TestRSNode(TestCase):
     def test_is_leaf(self):
         self.fail()
 
-    def _traverse_relation_check(self, root: RSNode):
-        for child in root.children:
-            if not root.is_leaf:
-                if child.parent != root:
-                    self.fail(f"parent {root} does not match child's "
+    def _relation_check(self, node: RSNode):
+        if not node.is_leaf:
+            for child in node.children:
+                if child.parent != node:
+                    self.fail(f"parent {node} does not match child's "
                               f"({child}) parent {child.parent}")
-                self._traverse_relation_check(child)
+        return
 
-    def _bounds_verification(self, root: RSNode):
-        if root.is_leaf:
-            bounds = BoundingBox.create(root.children)
+    def _bounds_verification(self, node: RSNode):
+        if node.is_leaf:
+            bounds = BoundingBox.create(node.children)
         else:
-            list_bounds = list(map(lambda child: child.bounds, root.children))
+            list_bounds = list(map(lambda child: child.bounds, node.children))
             bounds = BoundingBox.create(list_bounds)
-        self.assertTrue(bounds == root.bounds)
-
-    def _traverse_bound_check(self, root: RSNode):
-        self._bounds_verification(root)
-        if not root.is_leaf:
-            for child in root.children:
-                self._traverse_bound_check(child)
+        self.assertTrue(bounds == node.bounds)
 
     def _traverse_tests(self, root: RSNode):
-        self._traverse_bound_check(root)
-        self._traverse_relation_check(root)
+        self._bounds_verification(root)
+        self._relation_check(root)
+        self._is_leaf_check(root)
+
+        if not root.is_leaf:
+            for child in root.children:
+                self._traverse_tests(child)
 
     def test_choose_subtree(self):
         def test__check_coverage():
