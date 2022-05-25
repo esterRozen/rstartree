@@ -17,7 +17,7 @@ class TestRSNode(TestCase):
         for child in node.children:
             if isinstance(child, RSNode):
                 has_node_child = True
-        if is_leaf ^ has_node_child:
+        if is_leaf == has_node_child:
             self.fail()
         return
 
@@ -37,14 +37,14 @@ class TestRSNode(TestCase):
             bounds = BoundingBox.create(list_bounds)
         self.assertTrue(bounds == node.bounds)
 
-    def _traverse_tests(self, root: RSNode):
+    def _traversal_tests(self, root: RSNode):
         self._bounds_verification(root)
         self._relation_check(root)
         self._is_leaf_check(root)
 
         if not root.is_leaf:
             for child in root.children:
-                self._traverse_tests(child)
+                self._traversal_tests(child)
 
     def test_choose_subtree(self):
         def test__check_coverage():
@@ -82,38 +82,38 @@ class TestRSNode(TestCase):
         """
         tree = self.new()
         tree.insert(Point(np.array([1, 3])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([2, 2])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([5, 2])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([4, 3])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
 
         tree.insert(Point(np.array([2, 3])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([5, 4])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([8, 2])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([5, 6])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([4, 8])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
 
         tree.insert(Point(np.array([5, 5])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([6, 1])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([8, 5])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
         tree.insert(Point(np.array([7, 4])))
-        self._traverse_tests(tree.root)
+        self._traversal_tests(tree.root)
 
     def test_split(self):
         """
         tests the invariants of the split
-        # splits properly chosen by heuristic
+        specifically ensure splits are chosen by correct heuristic
         """
         self.fail()
 
