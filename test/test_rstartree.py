@@ -11,8 +11,15 @@ class TestRSNode(TestCase):
     def new():
         return RStarTree(1, 4)
 
-    def test_is_leaf(self):
-        self.fail()
+    def _is_leaf_check(self, node: RSNode):
+        is_leaf = node.is_leaf
+        has_node_child = False
+        for child in node.children:
+            if isinstance(child, RSNode):
+                has_node_child = True
+        if is_leaf ^ has_node_child:
+            self.fail()
+        return
 
     def _relation_check(self, node: RSNode):
         if not node.is_leaf:
