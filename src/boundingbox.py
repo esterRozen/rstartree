@@ -135,7 +135,7 @@ class BoundingBox:
 @dataclass
 class Point(BoundingBox):
     # idiomatically communicate this is a point
-    def __init__(self, point: NDArray):
+    def __init__(self, point: NDArray[float]):
         self.tops = point
         self.bottoms = point
         self.point = point
