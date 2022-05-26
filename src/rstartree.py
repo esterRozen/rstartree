@@ -44,8 +44,9 @@ class RSNode:
         # TODO remove this. it's terrible
         self._success = False
 
-    def __repr__(self):
-        return "Node(" + self.bounds.__repr__() \
+    def __repr__(self) -> str:
+        return "Node(" + "*".join(list(map(str, self.bounds.dims))) \
+               + " at " + str(self.bounds.bottoms.tolist()) \
                + ", leaf: " + str(self.is_leaf) \
                + ", children: " + str(len(self.children)) \
                + ")"
