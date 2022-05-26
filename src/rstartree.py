@@ -322,6 +322,11 @@ class RSNode:
 
             self.parent.children += new_nodes
 
+        for added_node in new_nodes:
+            if not added_node.is_leaf:
+                for child in added_node.children:
+                    child.parent = added_node
+
     def _split_in_two(self) -> List['RSNode']:
         """
         chooses split composition of node currently inside,
