@@ -1,6 +1,7 @@
+from unittest import TestCase
+import random as rand
 import numpy as np
 from numpy.typing import NDArray
-from unittest import TestCase
 
 from src.rstartree import RStarTree, RSNode, BoundingBox
 from src.boundingbox import Point
@@ -10,6 +11,10 @@ class TestRSNode(TestCase):
     @staticmethod
     def new():
         return RStarTree(1, 4)
+
+    @staticmethod
+    def new_big():
+        return RStarTree(18, 40)
 
     def _is_leaf_check(self, node: RSNode):
         is_leaf = node.is_leaf
@@ -110,6 +115,25 @@ class TestRSNode(TestCase):
         self._traversal_tests(tree.root)
         tree.insert(Point(np.array([7, 4])))
         self._traversal_tests(tree.root)
+
+        tree.insert(Point(np.array([35, 31])))
+        self._traversal_tests(tree.root)
+        for _ in range(100):
+            x = rand.randint(1, 50)
+            y = rand.randint(1, 50)
+            tree.insert(Point(np.array([x, y])))
+            self._traversal_tests(tree.root)
+
+    def test_insert_capacity(self):
+        tree = self.new_big()
+
+        for _ in range(1000):
+            x = rand.randint(1, 50)
+            y = rand.randint(1, 50)
+            tree.insert(Point(np.array([x, y])))
+            self._traversal_tests(tree.root)
+
+        tree.insert(Point(np.array([1, 1])))
 
     def test_split(self):
         """
