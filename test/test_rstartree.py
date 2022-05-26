@@ -75,10 +75,7 @@ class TestRSNode(TestCase):
 
         self.fail()
 
-    def test_query(self):
-        self.fail()
-
-    def test_insert(self):
+    def test_insert_point(self):
         """
         tests invariants of insertion.
         - bounds must remain consistent
@@ -124,7 +121,7 @@ class TestRSNode(TestCase):
             tree.insert(Point(np.array([x, y])))
             self._traversal_tests(tree.root)
 
-    def test_insert_capacity(self):
+    def test_insert_capacity_point(self):
         tree = self.new_big()
 
         for _ in range(10000):
@@ -135,6 +132,22 @@ class TestRSNode(TestCase):
         print(tree.height)
         self._traversal_tests(tree.root)
         tree.insert(Point(np.array([1, 1])))
+        return
+
+    def test_query_point(self):
+        tree = self.new()
+
+        for _ in range(100):
+            x = rand.randint(1, 50)
+            y = rand.randint(1, 50)
+            tree.insert(Point(np.array([x, y])))
+
+        tree.insert(Point(np.array([20, 22])))
+
+        result = tree.query(Point(np.array([20, 22])))
+
+        self.assertTrue(result is not None)
+        self.assertTrue(result[0] == Point(np.array([20, 22])))
 
     def test_split(self):
         """
