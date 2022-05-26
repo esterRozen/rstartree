@@ -517,7 +517,7 @@ class RSNode:
 
 
 class RStarTree:
-    def __init__(self, lower=4, upper=50, shape=0.5):
+    def __init__(self, lower: int = 4, upper: int = 50, shape: float = 0.5):
         # helps maintain invariants by preventing these from being changed
         self.__lower = lower
         self.__upper = upper
