@@ -76,9 +76,10 @@ class TestRSNode(TestCase):
     def test_insert(self):
         """
         tests invariants of insertion.
-        # bounds must remain consistent
-        # relationships must be proper
-        # must never be overfilled
+        - bounds must remain consistent
+        - relationships must be proper
+        - must never be overfilled
+        - must always have correct properties
         """
         tree = self.new()
         tree.insert(Point(np.array([1, 3])))
