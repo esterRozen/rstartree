@@ -52,18 +52,18 @@ class RSNode:
                + ")"
 
     @property
-    def height(self) -> int:
-        if self.is_leaf:
-            return 1
-        else:
-            return 1 + self.children[0].height
-
-    @property
     def depth(self) -> int:
         if self.is_root:
             return 0
         else:
             return 1 + self.parent.depth
+
+    @property
+    def height(self) -> int:
+        if self.is_leaf:
+            return 1
+        else:
+            return 1 + self.children[0].height
 
     @property
     def is_leaf(self) -> bool:
@@ -78,12 +78,19 @@ class RSNode:
         return self.children.__len__() >= self.__tree.upper
 
     @property
+    def is_root(self) -> bool:
+        return self.parent is None
+
+    @property
     def is_underfilled(self) -> bool:
         return self.children.__len__() < self.__tree.lower
 
     @property
-    def is_root(self) -> bool:
-        return self.parent is None
+    def num_elements(self) -> int:
+        if self.is_leaf:
+            return len(self.children)
+        else:
+            return sum([child.num_elements for child in self.children])
 
     # main interaction methods
 
