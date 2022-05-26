@@ -121,6 +121,3 @@ class TestRSNode(TestCase):
 class TestRStarTree(TestCase):
     def test_insert(self):
         self.fail()
-
-    def test_overflow_treatment(self):
-        self.fail()
