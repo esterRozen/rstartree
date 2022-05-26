@@ -52,21 +52,21 @@ class RSNode:
                + ")"
 
     @property
-    def height(self):
+    def height(self) -> int:
         if self.is_leaf:
             return 1
         else:
             return 1 + self.children[0].height
 
     @property
-    def depth(self):
+    def depth(self) -> int:
         if self.is_root:
             return 0
         else:
             return 1 + self.parent.depth
 
     @property
-    def is_leaf(self):
+    def is_leaf(self) -> bool:
         if not self.children:
             return True
         if isinstance(self.children[0], BoundingBox):
@@ -74,15 +74,15 @@ class RSNode:
         return False
 
     @property
-    def is_overfilled(self):
+    def is_overfilled(self) -> bool:
         return self.children.__len__() >= self.__tree.upper
 
     @property
-    def is_underfilled(self):
+    def is_underfilled(self) -> bool:
         return self.children.__len__() < self.__tree.lower
 
     @property
-    def is_root(self):
+    def is_root(self) -> bool:
         return self.parent is None
 
     # main interaction methods
@@ -179,8 +179,8 @@ class RSNode:
         # if any in covering nodes
         if covering_nodes:
             idx = np.argmin(list(map(
-                    lambda covering_node: covering_node.bounds.volume,
-                    covering_nodes
+                lambda covering_node: covering_node.bounds.volume,
+                covering_nodes
             )))
             return covering_nodes[idx]
 
@@ -191,10 +191,11 @@ class RSNode:
         E: List[RSNode] = [child for child in self.children]
         perim_change = [node.bounds.min_bb_with(element).margin_diff(node.bounds) for node in E]
         E_sorted: List[Tuple[float, RSNode]] = sorted(
-                zip(perim_change, E),
-                key=lambda tup: tup[0], reverse=False)
+            zip(perim_change, E),
+            key=lambda tup: tup[0], reverse=False)
         E: NDArray[Union[float, RSNode]] = np.array([[x, y] for x, y in E_sorted])
-        perim_change, E = (E[:, 0].tolist(), E[:, 1].tolist())
+        perim_change = E[:, 0].tolist()
+        E = E[:, 1].tolist()
 
         # assign to first in list if none of the other entries would suffer from assignment
         # (by increased overlap with first node)
@@ -294,9 +295,9 @@ class RSNode:
             new_nodes[1].bounds = BoundingBox.create(new_nodes[1].children)
         else:
             new_nodes[0].bounds = BoundingBox.create(
-                    [child.bounds for child in new_nodes[0].children])
+                [child.bounds for child in new_nodes[0].children])
             new_nodes[1].bounds = BoundingBox.create(
-                    [child.bounds for child in new_nodes[1].children])
+                [child.bounds for child in new_nodes[1].children])
 
         new_nodes[0].o_box = new_nodes[0].bounds
         new_nodes[1].o_box = new_nodes[1].bounds
@@ -309,14 +310,6 @@ class RSNode:
 
             new_nodes[0].parent = new_root
             new_nodes[1].parent = new_root
-
-            if not new_nodes[0].is_leaf:
-                for child in new_nodes[0].children:
-                    child.parent = new_nodes[0]
-
-            if not new_nodes[1].is_leaf:
-                for child in new_nodes[1].children:
-                    child.parent = new_nodes[1]
 
             new_root.children = new_nodes
 
