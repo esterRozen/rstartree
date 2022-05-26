@@ -62,8 +62,12 @@ class BoundingBox:
         return box.volume
 
     @property
-    def center(self) -> float:
+    def center(self) -> NDArray[float]:
         return np.divide(np.add(self.tops, self.bottoms), 2)
+
+    @property
+    def dims(self) -> List[float]:
+        return np.subtract(self.tops, self.bottoms).tolist()
 
     @property
     def margin(self) -> float:
