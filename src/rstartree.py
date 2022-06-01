@@ -204,6 +204,7 @@ class RSNode:
         # sort in ascending order of the amount each would grow in perimeter
         E: List[RSNode] = [child for child in self.children]
         perim_change = [node.bounds.min_bb_with(element).margin_diff(node.bounds) for node in E]
+        # TODO slow
         E_sorted: List[Tuple[float, RSNode]] = sorted(
             zip(perim_change, E),
             key=lambda tup: tup[0], reverse=False)
@@ -452,10 +453,13 @@ class RSNode:
         # inner apply: over different bounding box positions
         # margin of bounding box pairs sc_1 and sc_2
         margin_sc: List[List[float]] = []
+        # volume_sc: List[List[float]] = []
         for side_list in sc_i_list:
-            margin_sc += [[]]
+            margin_sc.append([])
+            # volume_sc.append([])
             for split in side_list:
-                margin_sc[-1] += [split[0].margin + split[1].margin]
+                margin_sc[-1].append(split[0].margin + split[1].margin)
+                # volume_sc[-1].append(split[0].volume + split[1].volume)
 
         # TODO if there are ties for best margin, choose by best area
 
@@ -468,17 +472,27 @@ class RSNode:
 
         # margin of overlap of box pairs
         margin_overlap_sc: List[List[float]] = []
+        volume_overlap_sc: List[List[float]] = []
+
         for side_list in overlap_sc:
             margin_ovlp_sc_1 = 0
             margin_ovlp_sc_2 = 0
+            # volume_ovlp_sc_1 = 0
+            # volume_ovlp_sc_2 = 0
             if side_list[0] is not None:
                 margin_ovlp_sc_1 = side_list[0].margin
+                # volume_ovlp_sc_1 = side_list[0].volume
             if side_list[1] is not None:
                 margin_ovlp_sc_2 = side_list[1].margin
-            margin_overlap_sc += [[
+                # volume_ovlp_sc_2 = side_list[1].volume
+            margin_overlap_sc.append([
                 margin_ovlp_sc_1,
                 margin_ovlp_sc_2
-            ]]
+            ])
+            # volume_overlap_sc.append([
+            #     volume_ovlp_sc_1,
+            #     volume_ovlp_sc_2
+            # ])
 
         margin_sc: NDArray = np.array(margin_sc)
         wg: NDArray = np.zeros(margin_sc.shape)
