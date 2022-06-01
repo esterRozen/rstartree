@@ -5,12 +5,18 @@ deviate from a license at least as restrictive as this one
 
 Algorithm based on R* Tree improved method:
 https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.367.7273&rep=rep1&type=pdf
+
 as well as original algorithm:
 https://infolab.usc.edu/csci599/Fall2001/paper/rstar-tree.pdf
+
 some r* tree algos which weren't majorly different
 from their r tree counterpart loosely based on:
 https://www.mathcs.emory.edu/~cheung/Courses/554/Syllabus/3-index/R-tree3.html
+
+nearest neighbor search based on:
+https://www.cs.umd.edu/~nick/papers/nnpaper.pdf
 """
+from typing import List, Union, Tuple, Optional
 import math
 from typing import List, Union, Tuple, Optional
 import numpy as np
@@ -321,6 +327,7 @@ class RSNode:
             new_root.children = new_nodes
 
             new_root.__tree.root = new_root
+
         else:
             self.parent.children.remove(self)
 
@@ -341,7 +348,7 @@ class RSNode:
         :return: 2 generic nodes with children of split node.
         """
 
-        # if internal node:
+        # if leaf:
         if self.is_leaf:
             # consider only one dim for leaf
             dim = self.__determine_dim()
@@ -362,6 +369,7 @@ class RSNode:
                 node_sort = sorted(self.children, key=lambda bbox: bbox.bottoms[dim])
             else:
                 node_sort = sorted(self.children, key=lambda node: node.bounds.bottoms[dim])
+
         else:
             if self.is_leaf:
                 node_sort = sorted(self.children, key=lambda bbox: bbox.tops[dim])
@@ -481,6 +489,7 @@ class RSNode:
         wg_alt[:, 0] = np.divide(margin_overlap_sc[:, 0], wf)
         wg_alt[:, 1] = np.divide(margin_overlap_sc[:, 1], wf)
 
+        # replace overlap free candidates with margin
         indexes = np.abs(margin_overlap_sc) > eps
         np.putmask(wg, indexes, wg_alt[indexes])
 
