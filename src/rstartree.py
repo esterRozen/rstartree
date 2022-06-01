@@ -18,7 +18,8 @@ https://www.cs.umd.edu/~nick/papers/nnpaper.pdf
 """
 from typing import List, Union, Tuple, Optional
 import math
-from typing import List, Union, Tuple, Optional
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import numpy as np
 from numpy.typing import NDArray
 
@@ -565,6 +566,31 @@ class RStarTree:
     @property
     def height(self):
         return self.root.height
+
+    def _plot_nodes(self, axis, node: RSNode):
+        bottom_left_corner = node.bounds.bottoms.tolist()
+        (x, y) = (bottom_left_corner[0], bottom_left_corner[1])
+        dims = node.bounds.dims
+        width, height = dims[0], dims[1]
+        line_width = max(1, 3 - node.depth)
+        color = (1.0 - node.depth/10, 0, 0)
+
+        if node.is_leaf:
+            return
+
+        axis.add_patch(Rectangle((x, y), width, height, edgecolor=color, linewidth=line_width, fill=False))
+
+        for child in node.children:
+            self._plot_nodes(axis, child)
+
+    def visualize(self):
+        fig, ax = plt.subplots()
+
+        ax.plot([-5, 55], [-5, 55])
+
+        self._plot_nodes(ax, self.root)
+
+        plt.show()
 
     def query(self, element: BoundingBox) -> \
             List[Union[BoundingBox, Point]]:

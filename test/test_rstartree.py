@@ -14,7 +14,7 @@ class TestRSNode(TestCase):
 
     @staticmethod
     def new_big():
-        return RStarTree(8, 40)
+        return RStarTree(6, 30)
 
     def _is_leaf_check(self, node: RSNode):
         is_leaf = node.is_leaf
@@ -130,6 +130,7 @@ class TestRSNode(TestCase):
             tree.insert(Point(np.array([x, y])))
 
         print(tree.height)
+        tree.visualize()
         self._traversal_tests(tree.root)
         tree.insert(Point(np.array([1, 1])))
         return
