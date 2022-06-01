@@ -72,7 +72,7 @@ class BoundingBox:
     @property
     def margin(self) -> float:
         # n dimensional perimeter
-        return 2 ** (len(self.tops) - 1) * np.sum(np.subtract(self.tops, self.bottoms))
+        return 2 ** (self.tops.shape[0] - 1) * np.sum(np.subtract(self.tops, self.bottoms))
 
     @property
     def volume(self) -> float:
